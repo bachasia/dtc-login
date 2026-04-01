@@ -1,0 +1,44 @@
+appId: com.dtcbrowser.app
+productName: DTC Browser
+copyright: Copyright © 2026
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+
+extraResources:
+  - from: resources/camoufox
+    to: camoufox
+    filter:
+      - '${os}/**'
+
+win:
+  executableName: dtc-browser
+  target:
+    - target: nsis
+      arch: [x64]
+
+mac:
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to camera
+    - NSMicrophoneUsageDescription: Application requests access to microphone
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+
+nsis:
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false

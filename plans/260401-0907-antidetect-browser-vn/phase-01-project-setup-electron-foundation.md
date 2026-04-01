@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P1 (Critical — blocks all other phases)
-- **Status:** pending
+- **Status:** complete
 - **Timeline:** Month 1, Week 1-2 (~20h)
 - **Effort:** ~20h
 
@@ -292,15 +292,15 @@ npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
 
 ## Todo
 
-- [ ] `npm create @quick-start/electron@latest` hoặc manual scaffold
-- [ ] Configure `electron.vite.config.ts`
-- [ ] Setup `electron-builder.yml` với extraResources cho camoufox/
-- [ ] Implement BrowserWindow với security settings
-- [ ] Implement contextBridge skeleton (preload)
-- [ ] Implement IPC handler registry pattern
-- [ ] Setup ESLint + Prettier
-- [ ] Verify: `npm run dev` mở app, `npm run build` tạo installer
-- [ ] Verify: preload → renderer IPC round-trip hoạt động
+- [x] `npm create @quick-start/electron@latest` hoặc manual scaffold
+- [x] Configure `electron.vite.config.ts`
+- [x] Setup `electron-builder.yml` với extraResources cho camoufox/
+- [x] Implement BrowserWindow với security settings
+- [x] Implement contextBridge skeleton (preload)
+- [x] Implement IPC handler registry pattern
+- [x] Setup ESLint + Prettier
+- [x] Verify: `npm run dev` mở app, `npm run build` tạo installer
+- [x] Verify: preload → renderer IPC round-trip hoạt động
 
 ---
 
