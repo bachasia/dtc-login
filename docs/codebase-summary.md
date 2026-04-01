@@ -1,7 +1,7 @@
 # DTC Browser — Codebase Summary
 
 **Project:** Antidetect browser for Vietnamese market  
-**Phase:** 04 (React UI) — COMPLETE  
+**Phase:** 05 (Automation & Local API) — COMPLETE  
 **Tech Stack:** Electron 29 + React 18 + TypeScript 5 + electron-vite 2 + electron-builder 24
 
 ## Project Structure
@@ -124,6 +124,14 @@ browser.status(profileId: string) → Promise<{ running: boolean, session?: Sess
 on(channel: string, cb: (...args: unknown[]) => void) → () => void
 // Valid channels: 'browser:status-changed', 'app:update-available'
 ```
+
+### Local Automation API (Phase 05)
+
+- `src/main/services/local-api-service.ts` runs an Express server on `127.0.0.1` with default port `50325`, ramping up AdsPower-compatible `/api/v1/*` endpoints and guarding every route except `/status` with a `Bearer <API key>` header check.
+- The service starts during `app.whenReady()` via `localApiService.applyFromSettings()` and is torn down with `localApiService.stop()` in the `before-quit` hook to keep lifecycle predictable.
+- Renderer settings (`src/renderer/src/pages/settings-page.tsx`) and hooks (`src/renderer/src/hooks/use-ipc.ts`) wire `window.electronAPI.api.getSettings`, `.updateSettings`, and `.testStatus` to let users toggle the server, change port/API key, and verify connectivity.
+- Endpoints reuse `browserService`, `profileService`, and the SQLite `sessions` table, returning structured `successResult`/`errorResult` payloads that include WebDriver/WS endpoints and profile metadata for automation clients.
+- Responses mention `getGeckodriverPath()` so automation tooling can locate the driver shipped under `resources/geckodriver/{platform}/{arch}/`.
 
 ## Domain Models
 

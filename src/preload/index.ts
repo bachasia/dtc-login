@@ -38,6 +38,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
       locale?: string
     }) => ipcRenderer.invoke('fingerprints:generate', input),
   },
+  api: {
+    getSettings: () => ipcRenderer.invoke('api:get-settings'),
+    updateSettings: (patch: {
+      enabled?: boolean
+      port?: number
+      apiKey?: string
+    }) => ipcRenderer.invoke('api:update-settings', patch),
+    testStatus: () => ipcRenderer.invoke('api:test-status'),
+  },
   // Returns an unsubscribe function to prevent listener leaks in React useEffect teardowns
   on: (channel: string, cb: (...args: unknown[]) => void): (() => void) => {
     const validChannels = ['browser:status-changed', 'app:update-available']

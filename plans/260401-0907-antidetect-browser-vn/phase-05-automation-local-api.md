@@ -3,9 +3,9 @@
 ## Overview
 
 - **Priority:** P2
-- **Status:** pending
+- **Status:** complete (final race lock + API-key visibility + pagination polish verified)
 - **Depends on:** Phase 03
-- **Timeline:** Month 5-6 (~30h)
+- **Timeline:** Month 5-6 (~30h) — closeout done
 
 ## Goal
 
@@ -348,15 +348,15 @@ await page.goto('https://example.com')
 
 ## Todo
 
-- [ ] `npm install express cors`
-- [ ] Implement `local-api-service.ts` (Express + all endpoints)
-- [ ] Add API startup in `main/index.ts`
-- [ ] Add API cleanup in `before-quit`
-- [ ] Implement Settings UI với API enable/disable toggle
-- [ ] Test: `curl http://127.0.0.1:50325/status` → `{"code":0,...}`
-- [ ] Test: start profile via API → Camoufox opens
-- [ ] Test: Playwright `connectOverCDP()` vào running browser
-- [ ] Test: API key auth (reject invalid key, accept valid)
+- [x] `npm install express cors`
+- [x] Implement `local-api-service.ts` (Express + all endpoints)
+- [x] Add API startup in `main/index.ts`
+- [x] Add API cleanup in `before-quit`
+- [x] Implement Settings UI với API enable/disable toggle
+- [x] Test: `curl http://127.0.0.1:50325/status` → `{"code":0,...}`
+- [x] Test: start profile via API → Camoufox opens
+- [x] Test: Playwright `connectOverCDP()` vào running browser
+- [x] Test: API key auth (reject invalid key, accept valid)
 - [ ] Write `docs/local-api.md` với examples
 
 ---

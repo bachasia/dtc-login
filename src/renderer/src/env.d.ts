@@ -53,6 +53,29 @@ interface Window {
         locale?: string
       }) => Promise<import('@shared/types').Fingerprint>
     }
+    api: {
+      getSettings: () => Promise<{
+        enabled: boolean
+        port: number
+        hasApiKey: boolean
+        running: boolean
+      }>
+      updateSettings: (patch: {
+        enabled?: boolean
+        port?: number
+        apiKey?: string
+      }) => Promise<{
+        success: boolean
+        settings?: {
+          enabled: boolean
+          port: number
+          hasApiKey: boolean
+          running: boolean
+        }
+        error?: string
+      }>
+      testStatus: () => Promise<{ ok: boolean; message: string }>
+    }
     // Returns unsubscribe function — call in useEffect cleanup to prevent listener leaks
     on: (
       channel: 'browser:status-changed' | 'app:update-available',

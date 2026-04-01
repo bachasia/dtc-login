@@ -1,7 +1,7 @@
 ---
 title: 'Antidetect Browser Desktop App — VN Market'
 description: 'Electron + Camoufox desktop app for multi-account management targeting Vietnamese MMO/affiliate/e-commerce market'
-status: pending
+status: in-progress
 priority: P1
 effort: 480h
 issue: ~
@@ -64,7 +64,8 @@ Electron Desktop App (shell)
 | 02  | [Profile Manager & SQLite Core](phase-02-profile-manager-sqlite-core.md)             | Month 1, Week 3-4 | complete |
 | 03  | [Camoufox Browser Launcher](phase-03-camoufox-browser-launcher.md)                   | Month 2           | complete |
 | 04  | [React UI Desktop App](phase-04-react-ui-desktop-app.md)                             | Month 3-4         | complete |
-| 05  | [Automation & Local API](phase-05-automation-local-api.md)                           | Month 5-6         | pending  |
+| 05  | [Automation & Local API](phase-05-automation-local-api.md)                           | Month 5-6         | complete |
+|     | (final race lock verified, API-key visibility + pagination fixes shipped)             |                   |          |
 | 06  | [VN Features & Polish](phase-06-vn-features-polish.md)                               | Month 7-8         | pending  |
 | 07  | [Licensing & Monetization](phase-07-licensing-monetization.md)                       | Month 9-10        | pending  |
 | 08  | [Launch & Marketing VN](phase-08-launch-marketing.md)                                | Month 11-12       | pending  |

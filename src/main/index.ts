@@ -3,6 +3,7 @@ import { join } from 'path'
 import { getDb } from './db/database'
 import { registerIpcHandlers } from './ipc-handlers'
 import { browserService } from './services/browser-service'
+import { localApiService } from './services/local-api-service'
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -45,16 +46,36 @@ function createWindow(): void {
 app.whenReady().then(() => {
   getDb() // eager init — ensures DB + migrations run before any IPC handler fires
   registerIpcHandlers()
+  void localApiService.applyFromSettings().catch((err) => {
+    console.error('[local-api:startup]', err)
+  })
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-app.on('before-quit', () => {
-  void browserService.stopAll().catch((err) => {
-    console.error('[before-quit:stopAll]', err)
-  })
+let isQuitting = false
+
+app.on('before-quit', (event) => {
+  if (isQuitting) return
+
+  isQuitting = true
+  event.preventDefault()
+
+  Promise.allSettled([browserService.stopAll(), localApiService.stop()])
+    .then((results) => {
+      const [browserResult, apiResult] = results
+      if (browserResult.status === 'rejected') {
+        console.error('[before-quit:stopAll]', browserResult.reason)
+      }
+      if (apiResult.status === 'rejected') {
+        console.error('[before-quit:localApiStop]', apiResult.reason)
+      }
+    })
+    .finally(() => {
+      app.quit()
+    })
 })
 
 app.on('window-all-closed', () => {

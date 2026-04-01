@@ -86,6 +86,25 @@ Renderer (React)
 
 ---
 
+## Local API Automation Flow (Phase 05)
+
+- Renderer settings page (`settings-page.tsx`) exposes controls for enabling/disabling the API server, editing port/API key, generating API keys, copying values, and invoking the test-status action, all backed by `useApiSettings`, `useUpdateApiSettings`, and `useTestApiStatus` hooks.
+- `api:get-settings` and `api:update-settings` now return an object with `enabled`, `port`, `running`, and `hasApiKey`, so the UI learns whether an API key is configured without ever receiving the raw key text.
+- The settings IPC handlers feed into `localApiService`, which serializes lifecycle calls behind `withLifecycleLock` to prevent concurrent start/stop races and persists the normalized values in the `settings` table.
+- When enabled, `localApiService` starts an Express server listening only on `127.0.0.1`, authenticates every `/api/v1` route with `Authorization: Bearer <API key>`, and exposes AdsPower-compatible endpoints for browser start/stop, profile CRUD, and listing active sessions/events with structured `successResult`/`errorResult` responses.
+- `/api/v1/user/list` now drives pagination with SQL `LIMIT ? OFFSET ?` plus a `COUNT(*)` query, ordered by `created_at DESC`, ensuring consistent paging even when thousands of profiles exist.
+- The service integrates `browserService.start/stop`, `profileService` mutations, and the `sessions` table query, returning WebDriver/WebSocket metadata plus `getGeckodriverPath()` for automation clients to locate platform-specific drivers under `resources/geckodriver/{platform}-{arch}`.
+- Lifecycle hooks call `localApiService.applyFromSettings()` during `app.whenReady()` and `localApiService.stop()` in `app.on('before-quit')`, ensuring the server mirrors persisted settings and is gracefully stopped alongside Camoufox processes.
+
+---
+
+## Browser Startup Reliability Enhancements (Phase 03)
+
+- `browserService.start` deduplicates concurrent requests per profile using `startingSessions`, so multiple UI clicks race to the same startup promise instead of spawning parallel Camoufox instances.
+- The service enforces cleanup by removing stopped sessions from the `sessions` table via `cleanupStoppedSession` and propagating `browser:status-changed` events after both successful startups and hard shutdowns, preventing stale session records from reappearing.
+
+---
+
 ## Module Dependencies (Phase 01 → 02)
 
 ### Phase 01: Stubs Only

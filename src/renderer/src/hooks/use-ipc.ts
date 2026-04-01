@@ -28,6 +28,20 @@ type FingerprintGenerateInput = {
   locale?: string
 }
 
+type LocalApiSettings = Awaited<
+  ReturnType<Window['electronAPI']['api']['getSettings']>
+>
+
+type LocalApiPatch = {
+  enabled?: boolean
+  port?: number
+  apiKey?: string
+}
+
+type LocalApiUpdateResult = Awaited<
+  ReturnType<Window['electronAPI']['api']['updateSettings']>
+>
+
 export function useProfiles(groupId?: string): UseQueryResult<Profile[]> {
   return useQuery<Profile[]>({
     queryKey: ['profiles', groupId ?? 'all'],
@@ -165,6 +179,37 @@ export function useGenerateFingerprint(): UseMutationResult<
   return useMutation({
     mutationFn: (input?: FingerprintGenerateInput) =>
       window.electronAPI.fingerprints.generate(input),
+  })
+}
+
+export function useApiSettings(): UseQueryResult<LocalApiSettings> {
+  return useQuery<LocalApiSettings>({
+    queryKey: ['api-settings'],
+    queryFn: () => window.electronAPI.api.getSettings(),
+  })
+}
+
+export function useUpdateApiSettings(): UseMutationResult<
+  LocalApiUpdateResult,
+  Error,
+  LocalApiPatch
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (patch: LocalApiPatch) =>
+      window.electronAPI.api.updateSettings(patch),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['api-settings'] }),
+  })
+}
+
+export function useTestApiStatus(): UseMutationResult<
+  { ok: boolean; message: string },
+  Error,
+  void
+> {
+  return useMutation({
+    mutationFn: () => window.electronAPI.api.testStatus(),
   })
 }
 

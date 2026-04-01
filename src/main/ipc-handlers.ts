@@ -4,6 +4,7 @@ import { groupService } from './services/group-service'
 import { proxyService } from './services/proxy-service'
 import { browserService } from './services/browser-service'
 import { generateFingerprint } from './services/fingerprint-service'
+import { localApiService } from './services/local-api-service'
 
 // Guard helpers — reject malformed renderer input before it reaches DB layer
 function assertString(v: unknown, field: string): string {
@@ -16,6 +17,46 @@ function assertStringArray(v: unknown, field: string): string[] {
   if (!Array.isArray(v) || v.some((x) => typeof x !== 'string'))
     throw new Error(`${field} must be a string array`)
   return v as string[]
+}
+
+type ApiSettingsPatch = {
+  enabled?: boolean
+  port?: number
+  apiKey?: string
+}
+
+function assertApiSettingsPatch(v: unknown): ApiSettingsPatch {
+  if (!v || typeof v !== 'object')
+    throw new Error('api settings input must be an object')
+
+  const o = v as Record<string, unknown>
+  const result: ApiSettingsPatch = {}
+
+  if (o['enabled'] !== undefined) {
+    if (typeof o['enabled'] !== 'boolean')
+      throw new Error('enabled must be boolean')
+    result.enabled = o['enabled']
+  }
+
+  if (o['port'] !== undefined) {
+    if (
+      typeof o['port'] !== 'number' ||
+      !Number.isInteger(o['port']) ||
+      o['port'] < 1 ||
+      o['port'] > 65535
+    ) {
+      throw new Error('port must be integer between 1 and 65535')
+    }
+    result.port = o['port']
+  }
+
+  if (o['apiKey'] !== undefined) {
+    if (typeof o['apiKey'] !== 'string')
+      throw new Error('apiKey must be string')
+    result.apiKey = o['apiKey']
+  }
+
+  return result
 }
 
 function assertCreateProfile(
@@ -47,6 +88,15 @@ function assertCreateProxy(v: unknown): Record<string, unknown> {
   if (typeof o['port'] !== 'number' || o['port'] < 1 || o['port'] > 65535)
     throw new Error('port must be 1-65535')
   return o
+}
+
+function toIpcErrorMessage(err: unknown, fallback: string): string {
+  if (!(err instanceof Error)) return fallback
+  const msg = err.message.trim()
+  if (!msg || msg.length > 160 || msg.includes('\n') || msg.includes('\r')) {
+    return fallback
+  }
+  return msg
 }
 
 function assertFingerprintGenerateInput(
@@ -151,7 +201,10 @@ export function registerIpcHandlers(): void {
       )
       return { success: true, session }
     } catch (err) {
-      return { success: false, error: String(err) }
+      return {
+        success: false,
+        error: toIpcErrorMessage(err, 'Failed to start browser'),
+      }
     }
   })
   ipcMain.handle('browser:stop', async (_e, profileId: unknown) => {
@@ -159,7 +212,10 @@ export function registerIpcHandlers(): void {
       await browserService.stop(assertString(profileId, 'profileId'))
       return { success: true }
     } catch (err) {
-      return { success: false, error: String(err) }
+      return {
+        success: false,
+        error: toIpcErrorMessage(err, 'Failed to stop browser'),
+      }
     }
   })
   ipcMain.handle('browser:status', (_e, profileId: unknown) => ({
@@ -170,5 +226,44 @@ export function registerIpcHandlers(): void {
   // --- Fingerprint generation ---
   ipcMain.handle('fingerprints:generate', (_e, input: unknown) => {
     return generateFingerprint(assertFingerprintGenerateInput(input))
+  })
+
+  // --- Local API settings ---
+  ipcMain.handle('api:get-settings', () => {
+    const settings = localApiService.getSettings()
+    const runtime = localApiService.getRuntimeState()
+    return {
+      enabled: settings.enabled,
+      port: settings.port,
+      hasApiKey: settings.apiKey.length > 0,
+      running: runtime.running,
+    }
+  })
+
+  ipcMain.handle('api:update-settings', async (_e, input: unknown) => {
+    try {
+      const updated = await localApiService.updateSettings(
+        assertApiSettingsPatch(input)
+      )
+      const runtime = localApiService.getRuntimeState()
+      return {
+        success: true,
+        settings: {
+          enabled: updated.enabled,
+          port: updated.port,
+          hasApiKey: updated.apiKey.length > 0,
+          running: runtime.running,
+        },
+      }
+    } catch (err) {
+      return {
+        success: false,
+        error: toIpcErrorMessage(err, 'Failed to update API settings'),
+      }
+    }
+  })
+
+  ipcMain.handle('api:test-status', async () => {
+    return localApiService.testStatus()
   })
 }

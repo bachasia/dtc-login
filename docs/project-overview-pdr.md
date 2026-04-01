@@ -4,7 +4,7 @@
 
 **DTC Browser** is a desktop antidetect browser built on Electron + React + TypeScript, targeting the Vietnamese market. It enables users to manage multiple browser profiles with custom fingerprints and proxies, bypassing fingerprint-based detection and geo-restrictions.
 
-**Status:** Phase 04 (React UI) complete. Phase 05 (Automation & Local API) in planning.
+**Status:** Phase 05 (Automation & Local API) complete. Phase 06 (VN features & polish) planned.
 
 ---
 
@@ -182,9 +182,11 @@ Empower Vietnamese businesses and individuals with a lightweight, privacy-focuse
 
 ### Phase 05: Automation & Local API
 
-- ✓ Local HTTP API (port 7777) for 3rd-party integrations
-- ✓ Browser automation (Puppeteer/Playwright via debug protocol)
-- ✓ Profile tagging + advanced search API
+- ✓ Local HTTP API (AdsPower-compatible `/api/v1/*` surface, default port 50325)
+- ✓ Browser automation (Puppeteer/Playwright via debug protocol, `browserService.start/stop` wrappers)
+- ✓ Profile tagging + advanced search API (handed by local API `user/list` paging)
+- ✓ Renderer settings page (`settings-page.tsx`) with Local API controls + hooks (`useApiSettings`, `useUpdateApiSettings`, `useTestApiStatus`)
+- ✓ Lifecycle integration — `localApiService.applyFromSettings()` on `app.whenReady()` and `localApiService.stop()` on `before-quit`
 
 ### Phase 06: VN Features & Polish
 
