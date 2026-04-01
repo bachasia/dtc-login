@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { getDb } from './db/database'
 import { registerIpcHandlers } from './ipc-handlers'
+import { browserService } from './services/browser-service'
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -48,6 +49,10 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('before-quit', () => {
+  browserService.stopAll()
 })
 
 app.on('window-all-closed', () => {

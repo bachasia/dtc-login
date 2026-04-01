@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { profileService } from './services/profile-service'
 import { groupService } from './services/group-service'
 import { proxyService } from './services/proxy-service'
+import { browserService } from './services/browser-service'
 
 // Guard helpers — reject malformed renderer input before it reaches DB layer
 function assertString(v: unknown, field: string): string {
@@ -66,8 +67,21 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('proxies:test', (_e, id: unknown) => proxyService.test(assertString(id, 'id')))
   ipcMain.handle('proxies:delete', (_e, id: unknown) => proxyService.delete(assertString(id, 'id')))
 
-  // Phase 03: Browser control (stubs — implemented in Phase 03)
-  ipcMain.handle('browser:start', async (_e, _profileId: string) => ({ ok: false }))
-  ipcMain.handle('browser:stop', async (_e, _profileId: string) => ({ ok: false }))
-  ipcMain.handle('browser:status', async (_e, _profileId: string) => 'stopped')
+  // --- Browser control ---
+  ipcMain.handle('browser:start', async (_e, profileId: unknown) => {
+    try {
+      const session = await browserService.start(assertString(profileId, 'profileId'))
+      return { success: true, session }
+    } catch (err) {
+      return { success: false, error: String(err) }
+    }
+  })
+  ipcMain.handle('browser:stop', (_e, profileId: unknown) => {
+    browserService.stop(assertString(profileId, 'profileId'))
+    return { success: true }
+  })
+  ipcMain.handle('browser:status', (_e, profileId: unknown) => ({
+    running: browserService.isRunning(assertString(profileId, 'profileId')),
+    session: browserService.getSession(assertString(profileId, 'profileId')),
+  }))
 }

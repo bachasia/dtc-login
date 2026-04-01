@@ -8,12 +8,15 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "package": "electron-vite build && electron-builder",
+    "download-camoufox": "npx ts-node scripts/download-camoufox.ts",
+    "download-camoufox:current": "npx ts-node scripts/download-camoufox.ts --current",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write ."
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",
     "electron-updater": "^6.1.7",
+    "fingerprint-generator": "^2.1.82",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^13.0.0"

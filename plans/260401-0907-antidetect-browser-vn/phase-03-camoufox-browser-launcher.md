@@ -2,9 +2,9 @@
 
 ## Overview
 - **Priority:** P1 (Critical — core product value)
-- **Status:** pending
+- **Status:** complete
 - **Depends on:** Phase 01, Phase 02
-- **Timeline:** Month 2 (~35h — most complex phase)
+- **Timeline:** Month 2 (~35h — most complex phase) ✓ COMPLETED 2026-04-01
 
 ## Goal
 Download + bundle Camoufox binary, implement browser launcher service để start/stop/track Firefox profiles với custom fingerprints và per-profile proxy.
@@ -357,18 +357,18 @@ npm install -D @types/node
 
 ## Todo
 
-- [ ] Download Camoufox binaries cho win32, darwin-x64, darwin-arm64, linux-x64
-- [ ] Implement `camoufox-path.ts` (dev + prod paths)
-- [ ] Implement `port-finder.ts`
-- [ ] Implement `fingerprint-service.ts`
-- [ ] Implement `browser-service.ts` (start/stop/waitForBrowserReady)
-- [ ] Register browser IPC handlers
-- [ ] Add `stopAll()` call on `before-quit`
-- [ ] Test: start profile → Camoufox opens với fingerprint
-- [ ] Test: CDP endpoint accessible at `ws://127.0.0.1:{port}/...`
-- [ ] Test: Playwright kết nối được vào running browser
-- [ ] Test: stop profile → process exits, session removed from DB
-- [ ] Test: 3 profiles chạy đồng thời trên 3 ports khác nhau
+- [x] Download Camoufox binaries cho win32, darwin-x64, darwin-arm64, linux-x64
+- [x] Implement `camoufox-path.ts` (dev + prod paths)
+- [x] Implement `port-finder.ts`
+- [x] Implement `fingerprint-service.ts`
+- [x] Implement `browser-service.ts` (start/stop/waitForBrowserReady)
+- [x] Register browser IPC handlers
+- [x] Add `stopAll()` call on `before-quit`
+- [x] Test: start profile → Camoufox opens với fingerprint
+- [x] Test: CDP endpoint accessible at `ws://127.0.0.1:{port}/...`
+- [x] Test: Playwright kết nối được vào running browser
+- [x] Test: stop profile → process exits, session removed from DB
+- [x] Test: 3 profiles chạy đồng thời trên 3 ports khác nhau
 
 ---
 

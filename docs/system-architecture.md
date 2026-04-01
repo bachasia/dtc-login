@@ -129,17 +129,39 @@ src/main/services/ (new)
    └─ depends: db
 ```
 
-### Phase 03: Camoufox Integration
+### Phase 03: Camoufox Integration ✓ COMPLETE
 ```
-src/main/ipc-handlers.ts
+src/main/ipc-handlers.ts ✓
 ├─ imports: browserService from ./services/browser-service.ts
+├─ ipcMain.handle('browser:start', async (e, profileId) => ...)
+├─ ipcMain.handle('browser:stop', (e, profileId) => ...)
+└─ ipcMain.handle('browser:status', (e, profileId) => ...)
 
-src/main/services/browser-service.ts (new)
-├─ BrowserService class
-├─ Methods: start(profileId), stop(profileId), status(profileId)
-├─ Spawns camoufox child process
-├─ Manages WebSocket connection (debug protocol)
-└─ emits: browser:status-changed events to renderer
+src/main/services/browser-service.ts ✓ (new)
+├─ BrowserService singleton
+├─ Methods: start(profileId), stop(profileId), stopAll(), getSession(profileId), isRunning(profileId)
+├─ Spawns Camoufox (coryking/camoufox fork) child process via spawn()
+├─ Finds free debug port via findFreePort()
+├─ Injects fingerprint via CAMOUFOX_FINGERPRINT env var
+├─ Manages WebSocket endpoint (debug protocol CDP)
+└─ Emits: browser:status-changed events to renderer
+
+src/main/services/fingerprint-service.ts ✓ (new)
+├─ FingerprintGenerator from @apify/fingerprint-generator
+├─ generateFingerprint(options?: {os, locale}) → Fingerprint
+└─ Fingerprint: os, screenWidth, screenHeight, timezone, locale, userAgent, raw
+
+src/main/utils/port-finder.ts ✓ (new)
+├─ findFreePort(basePort = 9222) → Promise<number>
+└─ Uses net.createServer() to test port availability
+
+src/main/utils/camoufox-path.ts ✓ (new)
+├─ getCamoufoxBinaryPath() → string
+├─ Dev: looks in resources/camoufox/{platform-arch}/firefox[.exe]
+└─ Prod: resolves via app.getPath('exe') for packaged app
+
+src/main/index.ts ✓ (modified)
+└─ app.on('before-quit', () => browserService.stopAll())
 ```
 
 ---
@@ -258,18 +280,26 @@ dtc-login/
 
 ---
 
+## Completed Architecture Changes
+
+**Phase 02:** ✓ SQLite layer
+- ✓ `src/main/db/` (schema, migrations, queries)
+- ✓ `src/main/services/` (Profile, Group, Proxy services)
+- ✓ `src/main/ipc-handlers.ts` (implementations)
+
+**Phase 03:** ✓ Camoufox integration
+- ✓ `src/main/services/browser-service.ts` (process management)
+- ✓ `src/main/services/fingerprint-service.ts` (fingerprint generation)
+- ✓ `src/main/utils/port-finder.ts` (port detection)
+- ✓ `src/main/utils/camoufox-path.ts` (binary resolution)
+- ✓ Event system: main → renderer (`browser:status-changed`)
+- ✓ `src/preload/index.ts` (add browser event listeners)
+
 ## Next Architecture Changes
 
-**Phase 02:** Add SQLite layer
-- New: `src/main/db/` (schema, migrations, queries)
-- New: `src/main/services/` (Profile, Group, Proxy services)
-- Modified: `src/main/ipc-handlers.ts` (replace stubs)
-
-**Phase 03:** Camoufox integration
-- New: `src/main/services/browser-service.ts` (process management)
-- New: Event system: main → renderer (`browser:status-changed`)
-- Modified: `src/preload/index.ts` (add browser event listeners)
-
 **Phase 04:** React UI
-- New: `src/renderer/src/pages/`, `components/`, `hooks/`
-- Modified: `src/renderer/src/App.tsx` (real UI)
+- New: `src/renderer/src/pages/` (ProfileList, ProfileDetail, Create)
+- New: `src/renderer/src/components/` (ProfileCard, GroupNav, ProxyManager)
+- New: `src/renderer/src/hooks/` (useProfiles, useBrowser, useGroups)
+- New: `src/renderer/src/stores/` (Zustand profile/browser stores)
+- Modified: `src/renderer/src/App.tsx` (layout, routing)

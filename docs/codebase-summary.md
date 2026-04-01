@@ -1,7 +1,7 @@
 # DTC Browser — Codebase Summary
 
 **Project:** Antidetect browser for Vietnamese market  
-**Phase:** 01 (Electron Foundation) — COMPLETE  
+**Phase:** 03 (Camoufox Browser Launcher) — COMPLETE  
 **Tech Stack:** Electron 29 + React 18 + TypeScript 5 + electron-vite 2 + electron-builder 24
 
 ## Project Structure
@@ -10,8 +10,16 @@
 dtc-login/
 ├── src/
 │   ├── main/                    # Electron main process (Node.js)
-│   │   ├── index.ts            # BrowserWindow lifecycle, app entry
-│   │   └── ipc-handlers.ts      # IPC handler registry (Phase 02+ implementations)
+│   │   ├── index.ts            # BrowserWindow lifecycle, app entry (Phase 03: before-quit cleanup)
+│   │   ├── ipc-handlers.ts      # IPC handler registry (Phase 02-03 implementations)
+│   │   ├── utils/
+│   │   │   ├── port-finder.ts   # Find free TCP port for debug protocol
+│   │   │   └── camoufox-path.ts # Platform-specific binary path resolver
+│   │   └── services/
+│   │       ├── profile-service.ts
+│   │       ├── browser-service.ts   # Camoufox spawn/stop/track (Phase 03)
+│   │       ├── fingerprint-service.ts # Fingerprint generation (Phase 03)
+│   │       └── proxy-service.ts
 │   ├── preload/                 # Context bridge (runs in sandboxed process)
 │   │   └── index.ts            # Exposes electronAPI to renderer
 │   ├── renderer/                # React app (runs in BrowserWindow)
@@ -57,6 +65,13 @@ dtc-login/
 - **Vite HMR** — Hot reload for renderer during development (no full app restart)
 - **electron-builder** — Cross-platform packaging (extraResources for camoufox binaries)
 
+### 5. Browser Launcher (Phase 03)
+- **Camoufox** — C++-patched Firefox 142.0.1 from coryking/camoufox fork
+- **Fingerprint injection** — Via CAMOUFOX_FINGERPRINT env var at spawn time
+- **Process tracking** — Map<profileId → ChildProcess>, cleanup on app exit
+- **CDP endpoint** — Exposes ws://127.0.0.1:{debugPort}/devtools/browser/... for Playwright/Selenium
+- **Session persistence** — SQLite sessions table tracks PID, debug port, WebSocket URL
+
 ## API Surface (electronAPI)
 
 Exposed to renderer via contextBridge:
@@ -87,11 +102,11 @@ proxies.test(id: string) → Promise<boolean>
 proxies.delete(id: string) → Promise<void>
 ```
 
-### Browser Control API
+### Browser Control API (Phase 03)
 ```typescript
-browser.start(profileId: string) → Promise<BrowserStatus>
-browser.stop(profileId: string) → Promise<void>
-browser.status(profileId: string) → Promise<BrowserStatus>
+browser.start(profileId: string) → Promise<{ success: boolean, session?: Session, error?: string }>
+browser.stop(profileId: string) → Promise<{ success: boolean }>
+browser.status(profileId: string) → Promise<{ running: boolean, session?: Session }>
 ```
 
 ### Event Subscriptions
@@ -115,26 +130,41 @@ See `src/shared/types.ts` for complete interface definitions.
 - OS, browser, version, screen dimensions, timezone, locale, user agent
 - Supports raw JSON for custom fingerprint data (Phase 03+)
 
-## Phase 01 Completeness
+## Phase 01-03 Completeness
 
-### Deliverables
+### Phase 01: Electron Foundation ✓
 ✓ Electron app scaffold with security defaults  
-✓ IPC handler registry (stubs — implementations in Phase 02+)  
-✓ Shared type definitions for all phases  
+✓ IPC handler registry (stubs)  
+✓ Shared type definitions  
 ✓ Build pipeline (npm run dev, npm run build)  
 ✓ TypeScript strict mode, ESLint + Prettier  
+
+### Phase 02: Profile Manager & SQLite ✓
+✓ SQLite database layer (better-sqlite3)
+✓ Profile/Group/Proxy CRUD services
+✓ IPC handler implementations
+✓ Database schema and migrations
+
+### Phase 03: Camoufox Browser Launcher ✓
+✓ Port finder utility (net.Server-based)
+✓ Camoufox binary path resolver (dev + prod)
+✓ Fingerprint generator (@apify/fingerprint-generator)
+✓ Browser service (start/stop/stopAll/getSession/isRunning)
+✓ Browser IPC handlers (browser:start/stop/status)
+✓ App lifecycle cleanup (before-quit handler)
+✓ Camoufox binary download script (scripts/download-camoufox.ts)
 
 ### Known Issues
 - 14 npm audit vulnerabilities (transitive from electron-builder, eslint v8)
   - Not blocking for development
   - Address before production packaging (Phase 07)
 
-### Next Phase (02)
-Phase 02 implements:
-- SQLite database layer (better-sqlite3)
-- Profile/Group/Proxy CRUD services
-- IPC handler implementations replacing stubs
-- Database schema and migrations
+### Next Phase (04)
+Phase 04 implements:
+- React UI (pages, components, forms)
+- Profile list view, detail editor, create form
+- Browser launcher UI (start/stop buttons)
+- Group and proxy management UI
 
 ## Scripts
 
