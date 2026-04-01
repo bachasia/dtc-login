@@ -80,12 +80,16 @@ function runMigrations(database: Database.Database): void {
   )`)
 
   for (const m of MIGRATIONS) {
-    const already = database.prepare('SELECT 1 FROM _migrations WHERE name = ?').get(m.name)
+    const already = database
+      .prepare('SELECT 1 FROM _migrations WHERE name = ?')
+      .get(m.name)
     if (!already) {
       // Wrap each migration in a transaction so partial failures leave no inconsistent state
       database.transaction(() => {
         database.exec(m.sql)
-        database.prepare('INSERT INTO _migrations (name) VALUES (?)').run(m.name)
+        database
+          .prepare('INSERT INTO _migrations (name) VALUES (?)')
+          .run(m.name)
       })()
     }
   }

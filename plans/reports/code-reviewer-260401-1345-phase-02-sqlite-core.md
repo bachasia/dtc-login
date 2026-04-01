@@ -68,6 +68,7 @@ ipcMain.handle('profiles:create', (_e, input) => profileService.create(input))
 `input` is typed `any` by ipcMain. The renderer calls this via `contextBridge` with `data: unknown`. TypeScript trusts `CreateProfileInput` at compile time, but at runtime the renderer can pass anything — wrong field types, missing `name`, extra prototype-polluting keys, objects with `__proto__` overrides, or `fingerprint` containing deeply nested JSON that blows up `JSON.stringify`.
 
 Specific exploitable gaps:
+
 - `input.name` is never checked to be a non-empty string; SQLite will accept `name = null` and `NOT NULL` will throw a DB error with a full stack trace returned to renderer.
 - `input.port` (proxy) is never validated as a number in range 1–65535; passing a string or negative number inserts invalid data silently.
 - `input.fingerprint` could be a circular reference, causing `JSON.stringify` to throw an uncaught `TypeError`.
@@ -145,7 +146,11 @@ If `fingerprint` or `tags` columns contain non-JSON strings (direct DB edit, mig
 
 ```ts
 function safeParse(val: string, fallback: unknown): unknown {
-  try { return JSON.parse(val) } catch { return fallback }
+  try {
+    return JSON.parse(val)
+  } catch {
+    return fallback
+  }
 }
 ```
 

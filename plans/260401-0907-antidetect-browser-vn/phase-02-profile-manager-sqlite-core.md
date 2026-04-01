@@ -1,12 +1,14 @@
 # Phase 02: Profile Manager & SQLite Core
 
 ## Overview
+
 - **Priority:** P1 (Critical)
 - **Status:** complete
 - **Depends on:** Phase 01
 - **Timeline:** Month 1, Week 3-4 (~25h)
 
 ## Goal
+
 Implement SQLite-based profile storage với better-sqlite3. CRUD profiles, groups, proxies. Expose qua IPC đến renderer.
 
 ---
@@ -103,7 +105,7 @@ export function getDb(): Database.Database {
   if (!db) {
     const dbPath = join(app.getPath('userData'), 'dtc-browser.db')
     db = new Database(dbPath)
-    db.pragma('journal_mode = WAL')  // Better concurrent read performance
+    db.pragma('journal_mode = WAL') // Better concurrent read performance
     db.pragma('foreign_keys = ON')
     runMigrations(db)
   }
@@ -121,7 +123,9 @@ function runMigrations(db: Database.Database): void {
   ]
 
   for (const m of migrations) {
-    const already = db.prepare('SELECT 1 FROM _migrations WHERE name = ?').get(m.name)
+    const already = db
+      .prepare('SELECT 1 FROM _migrations WHERE name = ?')
+      .get(m.name)
     if (!already) {
       const sql = readFileSync(m.file, 'utf8')
       db.exec(sql)
@@ -136,7 +140,11 @@ function runMigrations(db: Database.Database): void {
 ```typescript
 import { v4 as uuidv4 } from 'uuid'
 import { getDb } from '../db/database'
-import type { Profile, CreateProfileInput, UpdateProfileInput } from '../../shared/types'
+import type {
+  Profile,
+  CreateProfileInput,
+  UpdateProfileInput,
+} from '../../shared/types'
 
 export const profileService = {
   list(groupId?: string): Profile[] {
@@ -144,9 +152,7 @@ export const profileService = {
     const sql = groupId
       ? 'SELECT * FROM profiles WHERE group_id = ? ORDER BY created_at DESC'
       : 'SELECT * FROM profiles ORDER BY created_at DESC'
-    const rows = groupId
-      ? db.prepare(sql).all(groupId)
-      : db.prepare(sql).all()
+    const rows = groupId ? db.prepare(sql).all(groupId) : db.prepare(sql).all()
     return rows.map(deserialize)
   },
 
@@ -158,17 +164,19 @@ export const profileService = {
   create(input: CreateProfileInput): Profile {
     const db = getDb()
     const id = input.id ?? uuidv4()
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO profiles (id, name, group_id, proxy_id, fingerprint, notes, tags)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       id,
       input.name,
       input.group_id ?? null,
       input.proxy_id ?? null,
       JSON.stringify(input.fingerprint ?? {}),
       input.notes ?? null,
-      JSON.stringify(input.tags ?? []),
+      JSON.stringify(input.tags ?? [])
     )
     return this.getById(id)!
   },
@@ -178,19 +186,39 @@ export const profileService = {
     const fields: string[] = []
     const values: unknown[] = []
 
-    if (input.name !== undefined) { fields.push('name = ?'); values.push(input.name) }
-    if (input.group_id !== undefined) { fields.push('group_id = ?'); values.push(input.group_id) }
-    if (input.proxy_id !== undefined) { fields.push('proxy_id = ?'); values.push(input.proxy_id) }
-    if (input.fingerprint !== undefined) { fields.push('fingerprint = ?'); values.push(JSON.stringify(input.fingerprint)) }
-    if (input.notes !== undefined) { fields.push('notes = ?'); values.push(input.notes) }
-    if (input.tags !== undefined) { fields.push('tags = ?'); values.push(JSON.stringify(input.tags)) }
+    if (input.name !== undefined) {
+      fields.push('name = ?')
+      values.push(input.name)
+    }
+    if (input.group_id !== undefined) {
+      fields.push('group_id = ?')
+      values.push(input.group_id)
+    }
+    if (input.proxy_id !== undefined) {
+      fields.push('proxy_id = ?')
+      values.push(input.proxy_id)
+    }
+    if (input.fingerprint !== undefined) {
+      fields.push('fingerprint = ?')
+      values.push(JSON.stringify(input.fingerprint))
+    }
+    if (input.notes !== undefined) {
+      fields.push('notes = ?')
+      values.push(input.notes)
+    }
+    if (input.tags !== undefined) {
+      fields.push('tags = ?')
+      values.push(JSON.stringify(input.tags))
+    }
 
     if (fields.length === 0) return this.getById(id)!
 
     fields.push('updated_at = unixepoch()')
     values.push(id)
 
-    db.prepare(`UPDATE profiles SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+    db.prepare(`UPDATE profiles SET ${fields.join(', ')} WHERE id = ?`).run(
+      ...values
+    )
     return this.getById(id)!
   },
 
@@ -201,7 +229,9 @@ export const profileService = {
   bulkDelete(ids: string[]): void {
     const db = getDb()
     const del = db.prepare('DELETE FROM profiles WHERE id = ?')
-    const txn = db.transaction((ids: string[]) => ids.forEach(id => del.run(id)))
+    const txn = db.transaction((ids: string[]) =>
+      ids.forEach((id) => del.run(id))
+    )
     txn(ids)
   },
 }
@@ -209,8 +239,8 @@ export const profileService = {
 function deserialize(row: Record<string, unknown>): Profile {
   return {
     ...row,
-    fingerprint: JSON.parse(row.fingerprint as string ?? '{}'),
-    tags: JSON.parse(row.tags as string ?? '[]'),
+    fingerprint: JSON.parse((row.fingerprint as string) ?? '{}'),
+    tags: JSON.parse((row.tags as string) ?? '[]'),
   } as Profile
 }
 ```
@@ -287,27 +317,31 @@ import { proxyService } from './services/proxy-service'
 export function registerIpcHandlers(): void {
   // --- Profiles ---
   ipcMain.handle('profiles:list', (_e, groupId?: string) =>
-    profileService.list(groupId))
+    profileService.list(groupId)
+  )
 
-  ipcMain.handle('profiles:get', (_e, id: string) =>
-    profileService.getById(id))
+  ipcMain.handle('profiles:get', (_e, id: string) => profileService.getById(id))
 
-  ipcMain.handle('profiles:create', (_e, input) =>
-    profileService.create(input))
+  ipcMain.handle('profiles:create', (_e, input) => profileService.create(input))
 
   ipcMain.handle('profiles:update', (_e, id: string, input) =>
-    profileService.update(id, input))
+    profileService.update(id, input)
+  )
 
   ipcMain.handle('profiles:delete', (_e, id: string) =>
-    profileService.delete(id))
+    profileService.delete(id)
+  )
 
   ipcMain.handle('profiles:bulk-delete', (_e, ids: string[]) =>
-    profileService.bulkDelete(ids))
+    profileService.bulkDelete(ids)
+  )
 
   // --- Groups ---
   ipcMain.handle('groups:list', () => groupService.list())
   ipcMain.handle('groups:create', (_e, input) => groupService.create(input))
-  ipcMain.handle('groups:update', (_e, id, input) => groupService.update(id, input))
+  ipcMain.handle('groups:update', (_e, id, input) =>
+    groupService.update(id, input)
+  )
   ipcMain.handle('groups:delete', (_e, id) => groupService.delete(id))
 
   // --- Proxies ---
@@ -322,16 +356,16 @@ export function registerIpcHandlers(): void {
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/db/database.ts` | create | DB init, migrations runner |
-| `src/main/db/migrations/001-init.sql` | create | Schema DDL |
-| `src/main/services/profile-service.ts` | create | Profile CRUD |
-| `src/main/services/group-service.ts` | create | Group CRUD |
-| `src/main/services/proxy-service.ts` | create | Proxy CRUD + test |
-| `src/main/ipc-handlers.ts` | modify | Register handlers |
-| `src/shared/types.ts` | modify | Add Profile/Group/Proxy/Session types |
-| `src/preload/index.ts` | modify | Add groups/proxies to contextBridge |
+| File                                   | Action | Description                           |
+| -------------------------------------- | ------ | ------------------------------------- |
+| `src/main/db/database.ts`              | create | DB init, migrations runner            |
+| `src/main/db/migrations/001-init.sql`  | create | Schema DDL                            |
+| `src/main/services/profile-service.ts` | create | Profile CRUD                          |
+| `src/main/services/group-service.ts`   | create | Group CRUD                            |
+| `src/main/services/proxy-service.ts`   | create | Proxy CRUD + test                     |
+| `src/main/ipc-handlers.ts`             | modify | Register handlers                     |
+| `src/shared/types.ts`                  | modify | Add Profile/Group/Proxy/Session types |
+| `src/preload/index.ts`                 | modify | Add groups/proxies to contextBridge   |
 
 ---
 

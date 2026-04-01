@@ -1,12 +1,14 @@
 # Phase 07: Licensing & Monetization
 
 ## Overview
+
 - **Priority:** P2
 - **Status:** pending
 - **Depends on:** Phase 04, 05, 06
 - **Timeline:** Month 9-10 (~25h)
 
 ## Goal
+
 Implement license key system, payment integration (SePay VN + Polar), profile count limits per plan, auto-update mechanism.
 
 ---
@@ -24,12 +26,12 @@ Implement license key system, payment integration (SePay VN + Polar), profile co
 
 ## Pricing Tiers
 
-| Plan | Profiles | Price | Notes |
-|------|---------|-------|-------|
-| Free | 5 | $0 | Không có Local API |
-| Starter | 50 | ~70k VND/tháng (~$3) | Local API included |
-| Pro | 200 | ~120k VND/tháng (~$5) | All features |
-| Team | Unlimited | ~250k VND/tháng (~$10) | Multi-device |
+| Plan    | Profiles  | Price                  | Notes              |
+| ------- | --------- | ---------------------- | ------------------ |
+| Free    | 5         | $0                     | Không có Local API |
+| Starter | 50        | ~70k VND/tháng (~$3)   | Local API included |
+| Pro     | 200       | ~120k VND/tháng (~$5)  | All features       |
+| Team    | Unlimited | ~250k VND/tháng (~$10) | Multi-device       |
 
 ---
 
@@ -50,6 +52,7 @@ Enforce profile count limit from license payload
 ```
 
 ### License JWT Payload
+
 ```typescript
 interface LicensePayload {
   email: string
@@ -60,9 +63,9 @@ interface LicensePayload {
     bulkOpen: boolean
     cookieImport: boolean
   }
-  issuedAt: number   // Unix timestamp
-  expiresAt: number  // Unix timestamp
-  deviceId: string   // Hardware fingerprint (MAC address hash)
+  issuedAt: number // Unix timestamp
+  expiresAt: number // Unix timestamp
+  deviceId: string // Hardware fingerprint (MAC address hash)
 }
 ```
 
@@ -73,7 +76,7 @@ interface LicensePayload {
 ### 1. `src/main/services/license-service.ts`
 
 ```typescript
-import * as jose from 'jose'  // JWT library
+import * as jose from 'jose' // JWT library
 import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
@@ -124,13 +127,18 @@ export const licenseService = {
   /**
    * Activate with license key from user input.
    */
-  async activate(licenseKey: string): Promise<{ success: boolean; error?: string }> {
+  async activate(
+    licenseKey: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const resp = await fetch('https://api.dtcbrowser.com/v1/license/activate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: licenseKey, deviceId: getDeviceId() }),
-      })
+      const resp = await fetch(
+        'https://api.dtcbrowser.com/v1/license/activate',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: licenseKey, deviceId: getDeviceId() }),
+        }
+      )
       const data = await resp.json()
       if (!resp.ok) return { success: false, error: data.message }
 
@@ -139,10 +147,13 @@ export const licenseService = {
       const { payload } = await jose.jwtVerify(data.token, publicKey)
       cachedLicense = payload as unknown as LicensePayload
 
-      writeFileSync(LICENSE_FILE, JSON.stringify({
-        token: data.token,
-        lastValidated: Math.floor(Date.now() / 1000),
-      }))
+      writeFileSync(
+        LICENSE_FILE,
+        JSON.stringify({
+          token: data.token,
+          lastValidated: Math.floor(Date.now() / 1000),
+        })
+      )
 
       return { success: true }
     } catch (err) {
@@ -179,10 +190,13 @@ export const licenseService = {
       body: JSON.stringify({ token, deviceId: getDeviceId() }),
     })
     if (resp.ok) {
-      writeFileSync(LICENSE_FILE, JSON.stringify({
-        token,
-        lastValidated: Math.floor(Date.now() / 1000),
-      }))
+      writeFileSync(
+        LICENSE_FILE,
+        JSON.stringify({
+          token,
+          lastValidated: Math.floor(Date.now() / 1000),
+        })
+      )
     }
   },
 }
@@ -223,6 +237,7 @@ start(port, apiKey) {
 ### 3. Payment Integration
 
 **Polar.sh (card payments, global):**
+
 ```typescript
 // Redirect to Polar checkout URL
 const POLAR_PRODUCTS = {
@@ -234,6 +249,7 @@ const POLAR_PRODUCTS = {
 ```
 
 **SePay (VietQR, VN banks):**
+
 ```typescript
 // SePay integration for VN bank transfer
 // User pays → SePay webhook → license server → issue JWT
@@ -275,6 +291,7 @@ app.whenReady().then(() => {
 ```
 
 electron-builder.yml publish config:
+
 ```yaml
 publish:
   provider: github
@@ -286,15 +303,15 @@ publish:
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/services/license-service.ts` | create | JWT license validation |
-| `src/main/services/profile-service.ts` | modify | Enforce profile count limit |
-| `src/main/services/local-api-service.ts` | modify | Enforce feature flags |
-| `src/main/ipc-handlers.ts` | modify | license:get, license:activate |
-| `src/renderer/src/pages/settings-page.tsx` | modify | License UI section |
-| `src/renderer/src/components/upgrade-dialog.tsx` | create | Upsell modal |
-| `src/shared/types.ts` | modify | Add LicensePayload type |
+| File                                             | Action | Description                   |
+| ------------------------------------------------ | ------ | ----------------------------- |
+| `src/main/services/license-service.ts`           | create | JWT license validation        |
+| `src/main/services/profile-service.ts`           | modify | Enforce profile count limit   |
+| `src/main/services/local-api-service.ts`         | modify | Enforce feature flags         |
+| `src/main/ipc-handlers.ts`                       | modify | license:get, license:activate |
+| `src/renderer/src/pages/settings-page.tsx`       | modify | License UI section            |
+| `src/renderer/src/components/upgrade-dialog.tsx` | create | Upsell modal                  |
+| `src/shared/types.ts`                            | modify | Add LicensePayload type       |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-title: "Antidetect Browser Desktop App — VN Market"
-description: "Electron + Camoufox desktop app for multi-account management targeting Vietnamese MMO/affiliate/e-commerce market"
+title: 'Antidetect Browser Desktop App — VN Market'
+description: 'Electron + Camoufox desktop app for multi-account management targeting Vietnamese MMO/affiliate/e-commerce market'
 status: pending
 priority: P1
 effort: 480h
@@ -19,6 +19,7 @@ created: 2026-04-01
 Build antidetect browser desktop app similar to AdsPower, using **Camoufox** (Firefox patched at C++ level) as browser engine + **Electron** as desktop shell. Target: Vietnamese MMO, affiliate, e-commerce users.
 
 **Key differentiators vs AdsPower:**
+
 - UI tiếng Việt
 - Giá $3-5/tháng (vs $9+)
 - Support Zalo/FB group
@@ -43,6 +44,7 @@ Electron Desktop App (shell)
 ```
 
 **Stack:**
+
 - Desktop: Electron + React + TypeScript
 - Browser engine: Camoufox (Firefox C++-patched, MPL-2.0)
 - Storage: SQLite (better-sqlite3)
@@ -56,16 +58,16 @@ Electron Desktop App (shell)
 
 ## Phases
 
-| # | Phase | Timeline | Status |
-|---|-------|----------|--------|
-| 01 | [Project Setup & Electron Foundation](phase-01-project-setup-electron-foundation.md) | Month 1, Week 1-2 | complete |
-| 02 | [Profile Manager & SQLite Core](phase-02-profile-manager-sqlite-core.md) | Month 1, Week 3-4 | complete |
-| 03 | [Camoufox Browser Launcher](phase-03-camoufox-browser-launcher.md) | Month 2 | complete |
-| 04 | [React UI Desktop App](phase-04-react-ui-desktop-app.md) | Month 3-4 | pending |
-| 05 | [Automation & Local API](phase-05-automation-local-api.md) | Month 5-6 | pending |
-| 06 | [VN Features & Polish](phase-06-vn-features-polish.md) | Month 7-8 | pending |
-| 07 | [Licensing & Monetization](phase-07-licensing-monetization.md) | Month 9-10 | pending |
-| 08 | [Launch & Marketing VN](phase-08-launch-marketing.md) | Month 11-12 | pending |
+| #   | Phase                                                                                | Timeline          | Status   |
+| --- | ------------------------------------------------------------------------------------ | ----------------- | -------- |
+| 01  | [Project Setup & Electron Foundation](phase-01-project-setup-electron-foundation.md) | Month 1, Week 1-2 | complete |
+| 02  | [Profile Manager & SQLite Core](phase-02-profile-manager-sqlite-core.md)             | Month 1, Week 3-4 | complete |
+| 03  | [Camoufox Browser Launcher](phase-03-camoufox-browser-launcher.md)                   | Month 2           | complete |
+| 04  | [React UI Desktop App](phase-04-react-ui-desktop-app.md)                             | Month 3-4         | complete |
+| 05  | [Automation & Local API](phase-05-automation-local-api.md)                           | Month 5-6         | pending  |
+| 06  | [VN Features & Polish](phase-06-vn-features-polish.md)                               | Month 7-8         | pending  |
+| 07  | [Licensing & Monetization](phase-07-licensing-monetization.md)                       | Month 9-10        | pending  |
+| 08  | [Launch & Marketing VN](phase-08-launch-marketing.md)                                | Month 11-12       | pending  |
 
 ---
 

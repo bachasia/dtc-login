@@ -1,12 +1,14 @@
 # Phase 06: VN Features & Polish
 
 ## Overview
+
 - **Priority:** P2
 - **Status:** pending
 - **Depends on:** Phase 04, 05
 - **Timeline:** Month 7-8 (~30h)
 
 ## Goal
+
 VN-market specific features: profile templates cho FB/TikTok/Shopee, cookie import/export, bulk operations, performance optimization, app polish.
 
 ---
@@ -171,7 +173,7 @@ async function bulkOpenBrowsers(profileIds: string[]): Promise<void> {
   const limit = 5
   for (let i = 0; i < profileIds.length; i += limit) {
     const batch = profileIds.slice(i, i + limit)
-    await Promise.all(batch.map(id => browserService.start(id)))
+    await Promise.all(batch.map((id) => browserService.start(id)))
     // Small delay between batches
     if (i + limit < profileIds.length) await sleep(1000)
   }
@@ -197,18 +199,21 @@ Allow users chuyển từ AdsPower sang DTC Browser:
 ### 5. Performance Optimizations
 
 **Virtual scroll for profile list:**
+
 ```typescript
 import { useVirtualizer } from '@tanstack/react-virtual'
 // Render only visible rows → smooth với 1000+ profiles
 ```
 
 **Lazy load fingerprint generation:**
+
 ```typescript
 // Generate fingerprint only when profile form opens
 // Cache last generated fingerprint
 ```
 
 **Browser process health check:**
+
 ```typescript
 // Periodically ping debug port to detect crashed browsers
 // Remove stale sessions from DB
@@ -237,15 +242,15 @@ setInterval(() => {
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/data/profile-templates.ts` | create | VN platform templates |
-| `src/main/services/cookie-service.ts` | create | Cookie import/export |
-| `src/main/ipc-handlers.ts` | modify | Cookie + bulk handlers |
-| `src/renderer/src/components/profile-form-dialog.tsx` | modify | Template picker |
-| `src/renderer/src/components/profile-table.tsx` | modify | Virtual scroll + bulk select |
-| `src/renderer/src/components/cookie-import-dialog.tsx` | create | Cookie import UI |
-| `src/main/index.ts` | modify | System tray setup |
+| File                                                   | Action | Description                  |
+| ------------------------------------------------------ | ------ | ---------------------------- |
+| `src/main/data/profile-templates.ts`                   | create | VN platform templates        |
+| `src/main/services/cookie-service.ts`                  | create | Cookie import/export         |
+| `src/main/ipc-handlers.ts`                             | modify | Cookie + bulk handlers       |
+| `src/renderer/src/components/profile-form-dialog.tsx`  | modify | Template picker              |
+| `src/renderer/src/components/profile-table.tsx`        | modify | Virtual scroll + bulk select |
+| `src/renderer/src/components/cookie-import-dialog.tsx` | create | Cookie import UI             |
+| `src/main/index.ts`                                    | modify | System tray setup            |
 
 ---
 

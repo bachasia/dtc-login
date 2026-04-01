@@ -1,12 +1,14 @@
 # Phase 04: React UI Desktop App
 
 ## Overview
+
 - **Priority:** P1
-- **Status:** pending
+- **Status:** complete
 - **Depends on:** Phase 01, 02, 03
 - **Timeline:** Month 3-4 (~40h)
 
 ## Goal
+
 Build complete Electron desktop UI: profile list, create/edit profile, proxy manager, group management, real-time browser status. UI tiếng Việt, dark/light mode.
 
 ---
@@ -75,7 +77,7 @@ import type { Profile, Group, Session } from '@shared/types'
 interface ProfileStore {
   profiles: Profile[]
   groups: Group[]
-  sessions: Record<string, Session>  // profileId → Session
+  sessions: Record<string, Session> // profileId → Session
   selectedGroup: string | null
   selectedIds: Set<string>
 
@@ -101,9 +103,12 @@ export const useProfileStore = create<ProfileStore>((set) => ({
     set((state) => ({
       sessions: session
         ? { ...state.sessions, [profileId]: session }
-        : Object.fromEntries(Object.entries(state.sessions).filter(([k]) => k !== profileId)),
+        : Object.fromEntries(
+            Object.entries(state.sessions).filter(([k]) => k !== profileId)
+          ),
     })),
-  setSelectedGroup: (selectedGroup) => set({ selectedGroup, selectedIds: new Set() }),
+  setSelectedGroup: (selectedGroup) =>
+    set({ selectedGroup, selectedIds: new Set() }),
   toggleSelect: (id) =>
     set((state) => {
       const next = new Set(state.selectedIds)
@@ -146,7 +151,8 @@ export function useDeleteProfiles() {
 
 export function useStartBrowser() {
   return useMutation({
-    mutationFn: (profileId: string) => window.electronAPI.browser.start(profileId),
+    mutationFn: (profileId: string) =>
+      window.electronAPI.browser.start(profileId),
   })
 }
 ```
@@ -219,10 +225,12 @@ export function ProfilesPage() {
 // Browser status từ IPC event
 useEffect(() => {
   window.electronAPI.on('browser:status-changed', ({ profileId, status }) => {
-    useProfileStore.getState().updateSession(
-      profileId,
-      status === 'running' ? { profile_id: profileId, ...rest } : null
-    )
+    useProfileStore
+      .getState()
+      .updateSession(
+        profileId,
+        status === 'running' ? { profile_id: profileId, ...rest } : null
+      )
   })
   return () => window.electronAPI.removeAllListeners('browser:status-changed')
 }, [])
@@ -256,19 +264,19 @@ useEffect(() => {
 
 ## Files to Create
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/renderer/src/App.tsx` | modify | Layout + routing |
-| `src/renderer/src/stores/profile-store.ts` | create | Zustand profile/session state |
-| `src/renderer/src/hooks/use-ipc.ts` | create | TanStack Query wrappers |
-| `src/renderer/src/pages/profiles-page.tsx` | create | Main profiles view |
-| `src/renderer/src/pages/proxies-page.tsx` | create | Proxy management |
-| `src/renderer/src/pages/settings-page.tsx` | create | App settings |
-| `src/renderer/src/components/profile-table.tsx` | create | Profile list table |
-| `src/renderer/src/components/profile-form-dialog.tsx` | create | Create/edit modal |
-| `src/renderer/src/components/fingerprint-editor.tsx` | create | Fingerprint UI |
-| `src/renderer/src/components/sidebar.tsx` | create | Left navigation |
-| `src/renderer/src/components/proxy-form-dialog.tsx` | create | Proxy create/edit |
+| File                                                  | Action | Description                   |
+| ----------------------------------------------------- | ------ | ----------------------------- |
+| `src/renderer/src/App.tsx`                            | modify | Layout + routing              |
+| `src/renderer/src/stores/profile-store.ts`            | create | Zustand profile/session state |
+| `src/renderer/src/hooks/use-ipc.ts`                   | create | TanStack Query wrappers       |
+| `src/renderer/src/pages/profiles-page.tsx`            | create | Main profiles view            |
+| `src/renderer/src/pages/proxies-page.tsx`             | create | Proxy management              |
+| `src/renderer/src/pages/settings-page.tsx`            | create | App settings                  |
+| `src/renderer/src/components/profile-table.tsx`       | create | Profile list table            |
+| `src/renderer/src/components/profile-form-dialog.tsx` | create | Create/edit modal             |
+| `src/renderer/src/components/fingerprint-editor.tsx`  | create | Fingerprint UI                |
+| `src/renderer/src/components/sidebar.tsx`             | create | Left navigation               |
+| `src/renderer/src/components/proxy-form-dialog.tsx`   | create | Proxy create/edit             |
 
 ---
 

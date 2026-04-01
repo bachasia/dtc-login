@@ -13,7 +13,9 @@ export function findFreePort(basePort = 9222): Promise<number> {
     })
     server.on('error', () => {
       // Port in use — try next
-      findFreePort(basePort + 1).then(resolve).catch(reject)
+      findFreePort(basePort + 1)
+        .then(resolve)
+        .catch(reject)
     })
   })
 }

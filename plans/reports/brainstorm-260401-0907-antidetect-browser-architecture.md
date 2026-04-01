@@ -10,17 +10,18 @@ Xây dựng antidetect browser desktop app tương tự AdsPower, target thị t
 
 ## Evaluated Approaches
 
-| Option | Mô tả | Verdict |
-|--------|-------|---------|
-| A: Electron + CDP | Wrapper app + JS fingerprint injection | 80% tính năng, feasible solo |
-| B: Fork Chromium | C++ level patches từ đầu | 2-3 năm solo, không khả thi |
-| C: Patched engine | Dùng Camoufox (Firefox patched C++) + build UI | **CHOSEN** |
+| Option            | Mô tả                                          | Verdict                      |
+| ----------------- | ---------------------------------------------- | ---------------------------- |
+| A: Electron + CDP | Wrapper app + JS fingerprint injection         | 80% tính năng, feasible solo |
+| B: Fork Chromium  | C++ level patches từ đầu                       | 2-3 năm solo, không khả thi  |
+| C: Patched engine | Dùng Camoufox (Firefox patched C++) + build UI | **CHOSEN**                   |
 
 ## Final Solution
 
 **Stack:** Electron + React + TypeScript + Camoufox + SQLite + Express
 
 **Architecture:**
+
 - Electron = desktop shell (UI, API server, process manager)
 - Camoufox = browser engine (Firefox patched at C++ level, MPL-2.0)
 - SQLite = local profile storage
@@ -48,6 +49,7 @@ Xây dựng antidetect browser desktop app tương tự AdsPower, target thị t
 ## SQLite Schema
 
 Tables: `profiles`, `groups`, `proxies`, `sessions`, `settings`
+
 - profiles: id, name, group_id, proxy_id, fingerprint (JSON), tags
 - sessions: profile_id, pid, debug_port, ws_endpoint, started_at
 
@@ -63,14 +65,14 @@ resources/camoufox/    # Bundled binaries (win32/darwin/linux)
 
 ## Roadmap
 
-| Phase | Timeline | Deliverable |
-|-------|----------|-------------|
-| MVP Core | Month 1-2 | Launch/close profile, basic fingerprint, proxy |
-| UI Complete | Month 3-4 | Electron app, profile/group management |
-| Automation API | Month 5-6 | Local API, Selenium/Playwright integration |
-| VN Features | Month 7-8 | FB/TikTok/Shopee templates, cookie import |
-| Licensing | Month 9-10 | Payment (SePay/Polar), license management |
-| Launch | Month 11-12 | Marketing VN, first 100 users |
+| Phase          | Timeline    | Deliverable                                    |
+| -------------- | ----------- | ---------------------------------------------- |
+| MVP Core       | Month 1-2   | Launch/close profile, basic fingerprint, proxy |
+| UI Complete    | Month 3-4   | Electron app, profile/group management         |
+| Automation API | Month 5-6   | Local API, Selenium/Playwright integration     |
+| VN Features    | Month 7-8   | FB/TikTok/Shopee templates, cookie import      |
+| Licensing      | Month 9-10  | Payment (SePay/Polar), license management      |
+| Launch         | Month 11-12 | Marketing VN, first 100 users                  |
 
 ## Risks
 

@@ -20,14 +20,14 @@ npx tsc --noEmit  # Type check
 
 ### Naming Conventions
 
-| File Type | Pattern | Example |
-|-----------|---------|---------|
-| **Service class** | kebab-case.ts | `profile-service.ts`, `browser-service.ts` |
-| **Utility function** | kebab-case.ts | `format-fingerprint.ts`, `validate-proxy.ts` |
-| **Constants** | CONSTANT_CASE | `const MAX_RETRIES = 3` |
-| **React component** | PascalCase.tsx | `ProfileCard.tsx`, `ProxyForm.tsx` |
-| **Hook** | camelCase.ts with `use` prefix | `useProfileList.ts`, `useBrowserStatus.ts` |
-| **Type** | PascalCase | `interface Profile {}`, `type BrowserStatus = ...` |
+| File Type            | Pattern                        | Example                                            |
+| -------------------- | ------------------------------ | -------------------------------------------------- |
+| **Service class**    | kebab-case.ts                  | `profile-service.ts`, `browser-service.ts`         |
+| **Utility function** | kebab-case.ts                  | `format-fingerprint.ts`, `validate-proxy.ts`       |
+| **Constants**        | CONSTANT_CASE                  | `const MAX_RETRIES = 3`                            |
+| **React component**  | PascalCase.tsx                 | `ProfileCard.tsx`, `ProxyForm.tsx`                 |
+| **Hook**             | camelCase.ts with `use` prefix | `useProfileList.ts`, `useBrowserStatus.ts`         |
+| **Type**             | PascalCase                     | `interface Profile {}`, `type BrowserStatus = ...` |
 
 ### Directory Structure Rules
 
@@ -53,8 +53,9 @@ src/
 │       ├── main.tsx                 # React entry point
 │       ├── App.tsx                  # Root component
 │       ├── pages/                   # Route-level components (Phase 04)
-│       ├── components/              # Reusable UI components (Phase 04)
-│       ├── hooks/                   # Custom React hooks (Phase 04)
+│       ├── components/              # Profile/Proxy UI components
+│       ├── hooks/                   # Custom renderer hooks (use-ipc wrappers)
+│       ├── stores/                  # Zustand stores managing selection/session
 │       ├── types.ts                 # Renderer-specific types
 │       └── index.css                # Global styles
 │
@@ -123,7 +124,9 @@ interface Proxy {
 
 ```typescript
 // Prevent IDOR: CreateInput excludes server-generated fields
-type CreateProfileInput = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>> & { name: string }
+type CreateProfileInput = Partial<
+  Omit<Profile, 'id' | 'created_at' | 'updated_at'>
+> & { name: string }
 
 // Renderer cannot accidentally overwrite created_at
 const profile: CreateProfileInput = {
@@ -183,7 +186,7 @@ export class ProfileService {
       input.notes ?? null,
       JSON.stringify(input.tags ?? []),
       now,
-      now,
+      now
     )
 
     return this.get(id)
@@ -191,7 +194,12 @@ export class ProfileService {
 
   update(id: string, input: UpdateProfileInput): Profile {
     const existing = this.get(id)
-    const merged = { ...existing, ...input, id: existing.id, created_at: existing.created_at }
+    const merged = {
+      ...existing,
+      ...input,
+      id: existing.id,
+      created_at: existing.created_at,
+    }
 
     const stmt = this.db.prepare(`
       UPDATE profiles SET name = ?, group_id = ?, proxy_id = ?, fingerprint = ?, notes = ?, tags = ?, updated_at = ?
@@ -205,7 +213,7 @@ export class ProfileService {
       JSON.stringify(merged.fingerprint),
       JSON.stringify(merged.tags),
       Date.now(),
-      id,
+      id
     )
 
     return this.get(id)
@@ -217,7 +225,9 @@ export class ProfileService {
 
   bulkDelete(ids: string[]): void {
     const placeholders = ids.map(() => '?').join(',')
-    this.db.prepare(`DELETE FROM profiles WHERE id IN (${placeholders})`).run(...ids)
+    this.db
+      .prepare(`DELETE FROM profiles WHERE id IN (${placeholders})`)
+      .run(...ids)
   }
 }
 ```
@@ -293,14 +303,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     list: (groupId?: string) => ipcRenderer.invoke('profiles:list', groupId),
     get: (id: string) => ipcRenderer.invoke('profiles:get', id),
     create: (data: unknown) => ipcRenderer.invoke('profiles:create', data),
-    update: (id: string, data: unknown) => ipcRenderer.invoke('profiles:update', id, data),
+    update: (id: string, data: unknown) =>
+      ipcRenderer.invoke('profiles:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('profiles:delete', id),
-    bulkDelete: (ids: string[]) => ipcRenderer.invoke('profiles:bulk-delete', ids),
+    bulkDelete: (ids: string[]) =>
+      ipcRenderer.invoke('profiles:bulk-delete', ids),
   },
   // ... other API groups
   on: (channel: string, cb: (...args: unknown[]) => void): (() => void) => {
     if (!validChannels.on.includes(channel)) return () => void 0
-    const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => cb(...args)
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      ...args: unknown[]
+    ): void => cb(...args)
     ipcRenderer.on(channel, listener)
     return () => ipcRenderer.removeListener(channel, listener)
   },
@@ -386,26 +401,38 @@ Before committing:
 ### Creating a New Feature (Phase 02 example)
 
 1. **Define types** → `src/shared/types.ts`
+
    ```typescript
-   export interface MyEntity { /* ... */ }
+   export interface MyEntity {
+     /* ... */
+   }
    export type CreateMyEntityInput = Omit<MyEntity, 'id' | 'created_at'>
    ```
 
 2. **Create service** → `src/main/services/my-service.ts`
+
    ```typescript
    export class MyService {
-     list(): MyEntity[] { /* ... */ }
-     create(input: CreateMyEntityInput): MyEntity { /* ... */ }
+     list(): MyEntity[] {
+       /* ... */
+     }
+     create(input: CreateMyEntityInput): MyEntity {
+       /* ... */
+     }
    }
    ```
 
 3. **Register IPC handlers** → `src/main/ipc-handlers.ts`
+
    ```typescript
    ipcMain.handle('my-entity:list', async () => myService.list())
-   ipcMain.handle('my-entity:create', async (_event, data) => myService.create(data))
+   ipcMain.handle('my-entity:create', async (_event, data) =>
+     myService.create(data)
+   )
    ```
 
 4. **Expose via preload** → `src/preload/index.ts`
+
    ```typescript
    contextBridge.exposeInMainWorld('electronAPI', {
      myEntity: {
@@ -462,8 +489,8 @@ Use `console.log/error` for now (Phase 06+ may add logging service).
 
 ```typescript
 // Main process
-console.error('[profiles:create]', error)  // Service level
-console.log('[ipc:ready]', 'handlers registered')  // App level
+console.error('[profiles:create]', error) // Service level
+console.log('[ipc:ready]', 'handlers registered') // App level
 
 // Renderer
 console.warn('[ProfileCard]', 'render failed', error)

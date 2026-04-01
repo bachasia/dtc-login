@@ -1,12 +1,14 @@
 # Phase 05: Automation & Local API
 
 ## Overview
+
 - **Priority:** P2
 - **Status:** pending
 - **Depends on:** Phase 03
 - **Timeline:** Month 5-6 (~30h)
 
 ## Goal
+
 Implement Express.js Local API server (AdsPower-compatible format, port 50325) cho phép Selenium/Playwright/external tools kết nối và điều khiển browser profiles. API key authentication.
 
 ---
@@ -97,7 +99,7 @@ let server: http.Server | null = null
 
 export const localApiService = {
   start(port: number, apiKey: string): void {
-    if (server) return  // Already running
+    if (server) return // Already running
 
     const app = express()
     app.use(express.json())
@@ -108,11 +110,13 @@ export const localApiService = {
 
     // Auth middleware (skip if apiKey is empty)
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.path === '/status') return next()  // Health check always allowed
-      if (!apiKey) return next()  // API key not set = no auth required
+      if (req.path === '/status') return next() // Health check always allowed
+      if (!apiKey) return next() // API key not set = no auth required
       const auth = req.headers['authorization']
       if (auth !== `Bearer ${apiKey}`) {
-        return res.status(401).json({ code: 401, data: {}, msg: 'Unauthorized' })
+        return res
+          .status(401)
+          .json({ code: 401, data: {}, msg: 'Unauthorized' })
       }
       next()
     })
@@ -127,7 +131,8 @@ export const localApiService = {
     // Start browser
     app.get('/api/v1/browser/start', async (req, res) => {
       const profileId = req.query['user_id'] as string
-      if (!profileId) return res.json({ code: -1, data: {}, msg: 'user_id required' })
+      if (!profileId)
+        return res.json({ code: -1, data: {}, msg: 'user_id required' })
       try {
         const session = await browserService.start(profileId)
         res.json({
@@ -150,7 +155,8 @@ export const localApiService = {
     // Stop browser
     app.get('/api/v1/browser/stop', (req, res) => {
       const profileId = req.query['user_id'] as string
-      if (!profileId) return res.json({ code: -1, data: {}, msg: 'user_id required' })
+      if (!profileId)
+        return res.json({ code: -1, data: {}, msg: 'user_id required' })
       browserService.stop(profileId)
       res.json({ code: 0, data: {}, msg: 'success' })
     })
@@ -235,7 +241,7 @@ function adaptCreateInput(body: Record<string, unknown>) {
 function getGeckodriverPath(): string {
   // Return bundled geckodriver path
   // Similar to getCamoufoxBinaryPath() logic
-  return ''  // Phase 03 utility can be extended
+  return '' // Phase 03 utility can be extended
 }
 ```
 
@@ -244,9 +250,16 @@ function getGeckodriverPath(): string {
 ```typescript
 // main/index.ts — after createWindow():
 const db = getDb()
-const apiEnabled = db.prepare("SELECT value FROM settings WHERE key='api_enabled'").get()?.value === 'true'
-const apiKey = db.prepare("SELECT value FROM settings WHERE key='api_key'").get()?.value ?? ''
-const apiPort = parseInt(db.prepare("SELECT value FROM settings WHERE key='api_port'").get()?.value ?? '50325')
+const apiEnabled =
+  db.prepare("SELECT value FROM settings WHERE key='api_enabled'").get()
+    ?.value === 'true'
+const apiKey =
+  db.prepare("SELECT value FROM settings WHERE key='api_key'").get()?.value ??
+  ''
+const apiPort = parseInt(
+  db.prepare("SELECT value FROM settings WHERE key='api_port'").get()?.value ??
+    '50325'
+)
 
 if (apiEnabled) {
   localApiService.start(apiPort, apiKey)
@@ -279,7 +292,9 @@ ipcMain.handle('api:toggle', (_e, enabled: boolean) => {
   } else {
     localApiService.stop()
   }
-  db.prepare("UPDATE settings SET value=? WHERE key='api_enabled'").run(String(enabled))
+  db.prepare("UPDATE settings SET value=? WHERE key='api_enabled'").run(
+    String(enabled)
+  )
 })
 ```
 
@@ -288,6 +303,7 @@ ipcMain.handle('api:toggle', (_e, enabled: boolean) => {
 ## Automation Usage Examples (for documentation)
 
 ### Python + Selenium
+
 ```python
 import requests
 from selenium import webdriver
@@ -302,10 +318,13 @@ options = Options()
 ```
 
 ### Node.js + Playwright
+
 ```javascript
-const { chromium } = require('playwright')  // or firefox
-const resp = await fetch('http://127.0.0.1:50325/api/v1/browser/start?user_id=PROFILE_ID',
-  { headers: { Authorization: 'Bearer YOUR_API_KEY' } })
+const { chromium } = require('playwright') // or firefox
+const resp = await fetch(
+  'http://127.0.0.1:50325/api/v1/browser/start?user_id=PROFILE_ID',
+  { headers: { Authorization: 'Bearer YOUR_API_KEY' } }
+)
 const { data } = await resp.json()
 const browser = await chromium.connectOverCDP(data.ws.puppeteer)
 const page = await browser.newPage()
@@ -316,14 +335,14 @@ await page.goto('https://example.com')
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/services/local-api-service.ts` | create | Express API server |
-| `src/main/index.ts` | modify | Start API on launch |
-| `src/main/ipc-handlers.ts` | modify | API toggle handlers |
-| `src/renderer/src/pages/settings-page.tsx` | modify | API settings UI |
-| `src/preload/index.ts` | modify | Expose api:toggle |
-| `docs/local-api.md` | create | API documentation |
+| File                                       | Action | Description         |
+| ------------------------------------------ | ------ | ------------------- |
+| `src/main/services/local-api-service.ts`   | create | Express API server  |
+| `src/main/index.ts`                        | modify | Start API on launch |
+| `src/main/ipc-handlers.ts`                 | modify | API toggle handlers |
+| `src/renderer/src/pages/settings-page.tsx` | modify | API settings UI     |
+| `src/preload/index.ts`                     | modify | Expose api:toggle   |
+| `docs/local-api.md`                        | create | API documentation   |
 
 ---
 

@@ -1,12 +1,14 @@
 # Phase 03: Camoufox Browser Launcher
 
 ## Overview
+
 - **Priority:** P1 (Critical — core product value)
 - **Status:** complete
 - **Depends on:** Phase 01, Phase 02
 - **Timeline:** Month 2 (~35h — most complex phase) ✓ COMPLETED 2026-04-01
 
 ## Goal
+
 Download + bundle Camoufox binary, implement browser launcher service để start/stop/track Firefox profiles với custom fingerprints và per-profile proxy.
 
 ---
@@ -25,11 +27,13 @@ Download + bundle Camoufox binary, implement browser launcher service để star
 ## Camoufox Binary Setup
 
 ### Download Strategy
+
 - Platform binaries: `win32-x64`, `darwin-x64`, `darwin-arm64`, `linux-x64`
 - Lưu vào `resources/camoufox/{platform}/` — bundle với app via `electron-builder.yml` `extraResources`
 - Version file: `resources/camoufox/version.txt`
 
 ### Download Script (`scripts/download-camoufox.ts`)
+
 ```typescript
 // Run: npx ts-node scripts/download-camoufox.ts
 import { execSync } from 'child_process'
@@ -40,7 +44,7 @@ import { mkdirSync } from 'fs'
 // python -c "from camoufox.sync_api import Camoufox; Camoufox.install()"
 // OR download from GitHub releases directly
 
-const CAMOUFOX_VERSION = '0.4.2'  // latest coryking/camoufox
+const CAMOUFOX_VERSION = '0.4.2' // latest coryking/camoufox
 const platforms = [
   { platform: 'win32', arch: 'x64', asset: 'camoufox-win32-x64.zip' },
   { platform: 'darwin', arch: 'x64', asset: 'camoufox-darwin-x64.tar.gz' },
@@ -73,7 +77,9 @@ export function findFreePort(basePort = 9222): Promise<number> {
     })
     server.on('error', () => {
       // Port in use, try next
-      findFreePort(basePort + 1).then(resolve).catch(reject)
+      findFreePort(basePort + 1)
+        .then(resolve)
+        .catch(reject)
     })
   })
 }
@@ -92,14 +98,20 @@ import { existsSync } from 'fs'
  * In prod: uses app.getPath('exe') + extraResources path
  */
 export function getCamoufoxBinaryPath(): string {
-  const platform = process.platform  // 'win32' | 'darwin' | 'linux'
-  const arch = process.arch           // 'x64' | 'arm64'
+  const platform = process.platform // 'win32' | 'darwin' | 'linux'
+  const arch = process.arch // 'x64' | 'arm64'
 
   const binaryName = platform === 'win32' ? 'firefox.exe' : 'firefox'
   const platformDir = `${platform}-${arch}`
 
   // Development: relative to project root
-  const devPath = join(process.cwd(), 'resources', 'camoufox', platformDir, binaryName)
+  const devPath = join(
+    process.cwd(),
+    'resources',
+    'camoufox',
+    platformDir,
+    binaryName
+  )
   if (existsSync(devPath)) return devPath
 
   // Production: extraResources are at {app.getPath('exe')}/../Resources/camoufox
@@ -107,11 +119,15 @@ export function getCamoufoxBinaryPath(): string {
     process.platform === 'darwin'
       ? join(app.getPath('exe'), '..', '..', 'Resources')
       : join(app.getPath('exe'), '..'),
-    'camoufox', platformDir, binaryName
+    'camoufox',
+    platformDir,
+    binaryName
   )
   if (existsSync(prodPath)) return prodPath
 
-  throw new Error(`Camoufox binary not found for ${platformDir}. Run: npm run download-camoufox`)
+  throw new Error(
+    `Camoufox binary not found for ${platformDir}. Run: npm run download-camoufox`
+  )
 }
 ```
 
@@ -134,20 +150,25 @@ export function generateFingerprint(options?: {
   const fp = generator.getFingerprint({
     devices: ['desktop'],
     operatingSystems: options?.os ?? ['windows', 'macos'],
-    browsers: ['firefox'],  // Camoufox is Firefox-based
+    browsers: ['firefox'], // Camoufox is Firefox-based
     locales: options?.locale ? [options.locale] : ['vi-VN', 'en-US'],
   })
 
   return {
     os: fp.fingerprint.navigator.platform?.toLowerCase().includes('win')
-      ? 'windows' : fp.fingerprint.navigator.platform?.toLowerCase().includes('mac')
-      ? 'macos' : 'linux',
+      ? 'windows'
+      : fp.fingerprint.navigator.platform?.toLowerCase().includes('mac')
+        ? 'macos'
+        : 'linux',
     screenWidth: fp.fingerprint.screen.width,
     screenHeight: fp.fingerprint.screen.height,
-    timezone: fp.fingerprint.navigator.languages?.[0] === 'vi-VN' ? 'Asia/Ho_Chi_Minh' : 'America/New_York',
+    timezone:
+      fp.fingerprint.navigator.languages?.[0] === 'vi-VN'
+        ? 'Asia/Ho_Chi_Minh'
+        : 'America/New_York',
     locale: options?.locale ?? 'vi-VN',
     userAgent: fp.fingerprint.userAgent,
-    raw: fp.fingerprint,  // Full raw data for Camoufox
+    raw: fp.fingerprint, // Full raw data for Camoufox
   }
 }
 ```
@@ -191,15 +212,19 @@ export const browserService = {
     if (profile.proxy_id) {
       const proxy = proxyService.getById(profile.proxy_id)
       if (proxy) {
-        const auth = proxy.username ? `${proxy.username}:${proxy.password}@` : ''
+        const auth = proxy.username
+          ? `${proxy.username}:${proxy.password}@`
+          : ''
         proxyArg = `${proxy.type}://${auth}${proxy.host}:${proxy.port}`
       }
     }
 
     // 4. Build Camoufox launch args
     const args = [
-      '--remote-debugging-port', String(debugPort),
-      '--profile', profileDir,
+      '--remote-debugging-port',
+      String(debugPort),
+      '--profile',
+      profileDir,
       '--no-first-run',
       '--no-default-browser-check',
     ]
@@ -210,7 +235,9 @@ export const browserService = {
       ...process.env,
     }
     if (profile.fingerprint.raw) {
-      camoufoxEnv['CAMOUFOX_FINGERPRINT'] = JSON.stringify(profile.fingerprint.raw)
+      camoufoxEnv['CAMOUFOX_FINGERPRINT'] = JSON.stringify(
+        profile.fingerprint.raw
+      )
     }
 
     // 6. Spawn Camoufox
@@ -227,10 +254,12 @@ export const browserService = {
 
     // 8. Persist session to DB
     const db = getDb()
-    db.prepare(`
+    db.prepare(
+      `
       INSERT OR REPLACE INTO sessions (profile_id, pid, debug_port, ws_endpoint)
       VALUES (?, ?, ?, ?)
-    `).run(profileId, proc.pid, debugPort, wsEndpoint)
+    `
+    ).run(profileId, proc.pid, debugPort, wsEndpoint)
 
     // 9. Handle unexpected exit
     proc.on('exit', () => {
@@ -260,7 +289,9 @@ export const browserService = {
   },
 
   getSession(profileId: string): Session | null {
-    const row = getDb().prepare('SELECT * FROM sessions WHERE profile_id = ?').get(profileId)
+    const row = getDb()
+      .prepare('SELECT * FROM sessions WHERE profile_id = ?')
+      .get(profileId)
     return row as Session | null
   },
 
@@ -272,7 +303,10 @@ export const browserService = {
 /**
  * Poll CDP endpoint until browser is ready (max 10s).
  */
-async function waitForBrowserReady(port: number, timeoutMs = 10_000): Promise<string> {
+async function waitForBrowserReady(
+  port: number,
+  timeoutMs = 10_000
+): Promise<string> {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
     try {
@@ -284,13 +318,16 @@ async function waitForBrowserReady(port: number, timeoutMs = 10_000): Promise<st
     } catch {
       // Not ready yet
     }
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise((r) => setTimeout(r, 200))
   }
   throw new Error(`Browser did not start on port ${port} within ${timeoutMs}ms`)
 }
 
-function notifyStatusChange(profileId: string, status: 'running' | 'stopped'): void {
-  BrowserWindow.getAllWindows().forEach(win => {
+function notifyStatusChange(
+  profileId: string,
+  status: 'running' | 'stopped'
+): void {
+  BrowserWindow.getAllWindows().forEach((win) => {
     win.webContents.send('browser:status-changed', { profileId, status })
   })
 }
@@ -332,17 +369,17 @@ app.on('before-quit', () => {
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/utils/port-finder.ts` | create | Find free TCP port |
-| `src/main/utils/camoufox-path.ts` | create | Platform binary path resolver |
-| `src/main/services/fingerprint-service.ts` | create | Fingerprint generator |
-| `src/main/services/browser-service.ts` | create | Launch/stop/track Camoufox |
-| `src/main/ipc-handlers.ts` | modify | Add browser:start/stop/status |
-| `src/main/index.ts` | modify | Add before-quit cleanup |
-| `src/preload/index.ts` | modify | Expose browser IPC |
-| `scripts/download-camoufox.ts` | create | Download camoufox binaries |
-| `resources/camoufox/{platform}/` | create | Binary directories |
+| File                                       | Action | Description                   |
+| ------------------------------------------ | ------ | ----------------------------- |
+| `src/main/utils/port-finder.ts`            | create | Find free TCP port            |
+| `src/main/utils/camoufox-path.ts`          | create | Platform binary path resolver |
+| `src/main/services/fingerprint-service.ts` | create | Fingerprint generator         |
+| `src/main/services/browser-service.ts`     | create | Launch/stop/track Camoufox    |
+| `src/main/ipc-handlers.ts`                 | modify | Add browser:start/stop/status |
+| `src/main/index.ts`                        | modify | Add before-quit cleanup       |
+| `src/preload/index.ts`                     | modify | Expose browser IPC            |
+| `scripts/download-camoufox.ts`             | create | Download camoufox binaries    |
+| `resources/camoufox/{platform}/`           | create | Binary directories            |
 
 ---
 
@@ -384,13 +421,13 @@ npm install -D @types/node
 
 ## Risk Assessment
 
-| Risk | Mitigation |
-|------|-----------|
-| Camoufox binary size (~200MB per platform) | Bundle chỉ current platform trong dev, tất cả trong prod build |
-| CAMOUFOX_FINGERPRINT format thay đổi theo version | Pin Camoufox version, test sau mỗi update |
-| macOS Gatekeeper chặn unsigned binary | Code signing Phase 07; dev: `xattr -cr resources/camoufox/darwin-*` |
-| Port conflicts nếu nhiều apps dùng 9222+ | Port finder tự động increment đến port free |
-| Process leak nếu app crash | Persist PID list, kill orphans khi app restart |
+| Risk                                              | Mitigation                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------- |
+| Camoufox binary size (~200MB per platform)        | Bundle chỉ current platform trong dev, tất cả trong prod build      |
+| CAMOUFOX_FINGERPRINT format thay đổi theo version | Pin Camoufox version, test sau mỗi update                           |
+| macOS Gatekeeper chặn unsigned binary             | Code signing Phase 07; dev: `xattr -cr resources/camoufox/darwin-*` |
+| Port conflicts nếu nhiều apps dùng 9222+          | Port finder tự động increment đến port free                         |
+| Process leak nếu app crash                        | Persist PID list, kill orphans khi app restart                      |
 
 ---
 

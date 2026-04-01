@@ -1,12 +1,14 @@
 # Phase 01: Project Setup & Electron Foundation
 
 ## Overview
+
 - **Priority:** P1 (Critical — blocks all other phases)
 - **Status:** complete
 - **Timeline:** Month 1, Week 1-2 (~20h)
 - **Effort:** ~20h
 
 ## Goal
+
 Bootstrap Electron + React + TypeScript project với electron-vite, đảm bảo security defaults đúng, build pipeline hoạt động, dev tooling sẵn sàng.
 
 ---
@@ -23,12 +25,14 @@ Bootstrap Electron + React + TypeScript project với electron-vite, đảm bả
 ## Requirements
 
 ### Functional
+
 - Electron app mở window, load React renderer
 - IPC bridge qua `contextBridge` hoạt động (preload → renderer)
 - Devtools mở trong development mode
 - Hot reload cho renderer (Vite HMR)
 
 ### Non-functional
+
 - Build cho: Windows x64, macOS arm64/x64, Linux x64
 - App name, icons, auto-update config sẵn trong electron-builder.yml
 - TypeScript strict mode, ESLint + Prettier setup
@@ -46,6 +50,7 @@ npm install
 ```
 
 Hoặc manual setup với `electron-vite`:
+
 ```bash
 mkdir dtc-login && cd dtc-login
 npm init -y
@@ -98,8 +103,8 @@ function createWindow(): void {
       nodeIntegration: false,
       sandbox: false, // false để preload có thể dùng Node APIs
     },
-    titleBarStyle: 'hidden',  // Custom title bar cho đẹp
-    trafficLightPosition: { x: 16, y: 16 },  // macOS
+    titleBarStyle: 'hidden', // Custom title bar cho đẹp
+    trafficLightPosition: { x: 16, y: 16 }, // macOS
   })
 
   // Dev: load Vite dev server
@@ -140,14 +145,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   profiles: {
     list: () => ipcRenderer.invoke('profiles:list'),
     create: (data: unknown) => ipcRenderer.invoke('profiles:create', data),
-    update: (id: string, data: unknown) => ipcRenderer.invoke('profiles:update', id, data),
+    update: (id: string, data: unknown) =>
+      ipcRenderer.invoke('profiles:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('profiles:delete', id),
   },
   // Phase 03: browser control
   browser: {
-    start: (profileId: string) => ipcRenderer.invoke('browser:start', profileId),
+    start: (profileId: string) =>
+      ipcRenderer.invoke('browser:start', profileId),
     stop: (profileId: string) => ipcRenderer.invoke('browser:stop', profileId),
-    status: (profileId: string) => ipcRenderer.invoke('browser:status', profileId),
+    status: (profileId: string) =>
+      ipcRenderer.invoke('browser:status', profileId),
   },
   // Events: main → renderer
   on: (channel: string, cb: (...args: unknown[]) => void) => {
@@ -156,7 +164,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on(channel, (_event, ...args) => cb(...args))
     }
   },
-  removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel),
+  removeAllListeners: (channel: string) =>
+    ipcRenderer.removeAllListeners(channel),
 })
 ```
 
@@ -183,7 +192,7 @@ extraResources:
   - from: resources/camoufox
     to: camoufox
     filter:
-      - '${os}/**'  # Platform-specific: win32/, darwin/, linux/
+      - '${os}/**' # Platform-specific: win32/, darwin/, linux/
 
 win:
   executableName: dtc-browser
@@ -273,20 +282,20 @@ npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
 
 ## Files to Create
 
-| File | Action | Description |
-|------|--------|-------------|
-| `package.json` | create | Project deps, scripts |
-| `electron.vite.config.ts` | create | Build config |
-| `electron-builder.yml` | create | Distribution config |
-| `tsconfig.json` | create | TypeScript config |
-| `src/main/index.ts` | create | BrowserWindow setup |
-| `src/main/ipc-handlers.ts` | create | IPC handler registry |
-| `src/preload/index.ts` | create | contextBridge API |
-| `src/renderer/src/App.tsx` | create | Root React component (placeholder) |
-| `src/renderer/src/main.tsx` | create | React entry |
-| `src/renderer/index.html` | create | HTML template |
-| `src/shared/types.ts` | create | Shared TS types |
-| `resources/camoufox/.gitkeep` | create | Placeholder for binaries |
+| File                          | Action | Description                        |
+| ----------------------------- | ------ | ---------------------------------- |
+| `package.json`                | create | Project deps, scripts              |
+| `electron.vite.config.ts`     | create | Build config                       |
+| `electron-builder.yml`        | create | Distribution config                |
+| `tsconfig.json`               | create | TypeScript config                  |
+| `src/main/index.ts`           | create | BrowserWindow setup                |
+| `src/main/ipc-handlers.ts`    | create | IPC handler registry               |
+| `src/preload/index.ts`        | create | contextBridge API                  |
+| `src/renderer/src/App.tsx`    | create | Root React component (placeholder) |
+| `src/renderer/src/main.tsx`   | create | React entry                        |
+| `src/renderer/index.html`     | create | HTML template                      |
+| `src/shared/types.ts`         | create | Shared TS types                    |
+| `resources/camoufox/.gitkeep` | create | Placeholder for binaries           |
 
 ---
 
@@ -316,11 +325,11 @@ npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
 
 ## Risk Assessment
 
-| Risk | Mitigation |
-|------|-----------|
+| Risk                            | Mitigation                                        |
+| ------------------------------- | ------------------------------------------------- |
 | electron-vite version conflicts | Pin version, check electron-vite@latest changelog |
-| macOS notarization phức tạp | Defer notarization đến Phase 07 (Licensing) |
-| Resources bundling path sai | Test extraResources trên mỗi platform sớm |
+| macOS notarization phức tạp     | Defer notarization đến Phase 07 (Licensing)       |
+| Resources bundling path sai     | Test extraResources trên mỗi platform sớm         |
 
 ---
 

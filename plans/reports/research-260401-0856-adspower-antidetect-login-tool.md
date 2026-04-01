@@ -11,6 +11,7 @@ AdsPower là antidetect browser phổ biến nhất cho multi-account management
 ---
 
 ## Table of Contents
+
 1. [AdsPower Overview](#1-adspower-overview)
 2. [Local API Architecture](#2-local-api-architecture)
 3. [Automation Integration](#3-automation-integration)
@@ -33,29 +34,33 @@ AdsPower là antidetect browser phổ biến nhất cho multi-account management
 ## 2. Local API Architecture
 
 ### Endpoints
+
 ```
 Base URL: http://local.adspower.net:50325/
 Alt URL:  http://localhost:50325/
 ```
 
 ### Authentication
+
 ```
 Header: Authorization: Bearer <API_KEY>
 ```
+
 Cần enable "Security Verification" trong AdsPower Settings, sau đó lấy API Key.
 
 ### Key Endpoints
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/v1/browser/start?user_id={id}` | Mở browser profile |
-| GET | `/api/v1/browser/stop?user_id={id}` | Đóng browser profile |
-| GET | `/api/v1/browser/active` | Kiểm tra profile đang chạy |
-| POST | `/api/v1/user/create` | Tạo profile mới |
-| GET | `/api/v1/user/list` | Liệt kê profiles |
-| DELETE | `/api/v1/user/delete` | Xóa profile |
+| Method | Endpoint                             | Mô tả                      |
+| ------ | ------------------------------------ | -------------------------- |
+| GET    | `/api/v1/browser/start?user_id={id}` | Mở browser profile         |
+| GET    | `/api/v1/browser/stop?user_id={id}`  | Đóng browser profile       |
+| GET    | `/api/v1/browser/active`             | Kiểm tra profile đang chạy |
+| POST   | `/api/v1/user/create`                | Tạo profile mới            |
+| GET    | `/api/v1/user/list`                  | Liệt kê profiles           |
+| DELETE | `/api/v1/user/delete`                | Xóa profile                |
 
 ### Response từ `browser/start`
+
 ```json
 {
   "code": 0,
@@ -72,17 +77,19 @@ Cần enable "Security Verification" trong AdsPower Settings, sau đó lấy API
 ```
 
 ### Rate Limits
-| Số profiles | Giới hạn |
-|-------------|----------|
-| 0–200 | 2 req/sec |
-| 200–5,000 | 5 req/sec |
-| 5,000+ | 10 req/sec |
+
+| Số profiles | Giới hạn   |
+| ----------- | ---------- |
+| 0–200       | 2 req/sec  |
+| 200–5,000   | 5 req/sec  |
+| 5,000+      | 10 req/sec |
 
 ---
 
 ## 3. Automation Integration
 
 ### Cách hoạt động
+
 1. AdsPower chạy ở background, expose local HTTP API
 2. Gọi `browser/start` → nhận WebSocket URL + WebDriver path
 3. Kết nối Selenium (`debuggerAddress`) hoặc Puppeteer (`browserWSEndpoint`) vào browser đang chạy
@@ -90,6 +97,7 @@ Cần enable "Security Verification" trong AdsPower Settings, sau đó lấy API
 5. Gọi `browser/stop` khi xong
 
 ### Điểm mạnh so với automation thuần
+
 - Browser có fingerprint thật (không bị detect là headless/bot)
 - Mỗi profile có cookies, localStorage riêng
 - IP proxy gắn theo profile
@@ -119,14 +127,14 @@ def open_browser(profile_id: str):
         params={"user_id": profile_id},
         headers=headers
     ).json()
-    
+
     if resp["code"] != 0:
         raise RuntimeError(f"Không mở được browser: {resp['msg']}")
-    
+
     data = resp["data"]
     options = Options()
     options.add_experimental_option("debuggerAddress", data["ws"]["selenium"])
-    
+
     driver = webdriver.Chrome(
         executable_path=data["webdriver"],
         options=options
@@ -160,47 +168,48 @@ def login(profile_id: str, url: str, username: str, password: str):
 ### Node.js + Puppeteer
 
 ```javascript
-const axios = require('axios');
-const puppeteer = require('puppeteer-core');
+const axios = require('axios')
+const puppeteer = require('puppeteer-core')
 
-const ADS_API = 'http://local.adspower.net:50325';
-const API_KEY = 'your_api_key';
-const PROFILE_ID = 'your_profile_id';
+const ADS_API = 'http://local.adspower.net:50325'
+const API_KEY = 'your_api_key'
+const PROFILE_ID = 'your_profile_id'
 
 async function loginWithAdspower(profileId, url, username, password) {
-  const headers = { Authorization: `Bearer ${API_KEY}` };
-  
+  const headers = { Authorization: `Bearer ${API_KEY}` }
+
   // Mở profile
   const { data: resp } = await axios.get(`${ADS_API}/api/v1/browser/start`, {
     params: { user_id: profileId },
-    headers
-  });
-  
-  if (resp.code !== 0) throw new Error(resp.msg);
-  
+    headers,
+  })
+
+  if (resp.code !== 0) throw new Error(resp.msg)
+
   // Kết nối Puppeteer
   const browser = await puppeteer.connect({
-    browserWSEndpoint: resp.data.ws.puppeteer
-  });
-  
+    browserWSEndpoint: resp.data.ws.puppeteer,
+  })
+
   try {
-    const [page] = await browser.pages();
-    await page.goto(url);
-    await page.type('#username', username);
-    await page.type('#password', password);
-    await page.click('[type="submit"]');
-    await page.waitForNavigation();
+    const [page] = await browser.pages()
+    await page.goto(url)
+    await page.type('#username', username)
+    await page.type('#password', password)
+    await page.click('[type="submit"]')
+    await page.waitForNavigation()
   } finally {
-    await browser.disconnect();
+    await browser.disconnect()
     await axios.get(`${ADS_API}/api/v1/browser/stop`, {
       params: { user_id: profileId },
-      headers
-    });
+      headers,
+    })
   }
 }
 ```
 
 ### PyPI Package (đơn giản hơn)
+
 ```python
 from adspower.sync_api.selenium import Profile, Group
 
@@ -227,16 +236,19 @@ profile.quit()
 ## 6. Resources
 
 ### Official
+
 - [AdsPower Local API Docs](https://localapi-doc-en.adspower.com/docs/Rdw7Iu)
 - [AdsPower GitHub (official)](https://github.com/AdsPower/localAPI)
 - [Python Examples](https://github.com/AdsPower/localAPI/tree/main/py-examples)
 - [AdsPower Local API page](https://www.adspower.com/local-api)
 
 ### Packages
+
 - [adspower PyPI](https://pypi.org/project/adspower/)
 - [Postman API Collection](https://documenter.getpostman.com/view/45822952/2sB34hEzQH)
 
 ### Tutorials
+
 - [Open Browser API Docs](https://localapi-doc-en.adspower.com/docs/FFMFMf)
 - [Code Samples](https://localapi-doc-en.adspower.com/docs/K4IsTq)
 - [Dolphin Anty: Selenium vs Puppeteer vs Playwright](https://dolphin-anty.com/blog/en/api-automation-in-browsers-what-are-selenium-puppeteer-and-playwright-2024/)

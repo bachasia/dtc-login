@@ -43,11 +43,11 @@
 
 ### Process Roles
 
-| Process | Runtime | Privileges | Responsibilities |
-|---------|---------|-----------|------------------|
-| **Main** | Node.js | Full OS | App lifecycle, services, IPC dispatch, database |
-| **Preload** | V8 (isolated) | ipcRenderer only | API gateway, IPC marshalling, listener cleanup |
-| **Renderer** | Chromium | Limited (no Node) | UI rendering, user input, state management |
+| Process      | Runtime       | Privileges        | Responsibilities                                |
+| ------------ | ------------- | ----------------- | ----------------------------------------------- |
+| **Main**     | Node.js       | Full OS           | App lifecycle, services, IPC dispatch, database |
+| **Preload**  | V8 (isolated) | ipcRenderer only  | API gateway, IPC marshalling, listener cleanup  |
+| **Renderer** | Chromium      | Limited (no Node) | UI rendering, user input, state management      |
 
 ---
 
@@ -89,6 +89,7 @@ Renderer (React)
 ## Module Dependencies (Phase 01 → 02)
 
 ### Phase 01: Stubs Only
+
 ```
 src/main/ipc-handlers.ts
 ├─ imports (none yet)
@@ -97,6 +98,7 @@ src/main/ipc-handlers.ts
 ```
 
 ### Phase 02: Database & Services
+
 ```
 src/main/ipc-handlers.ts
 ├─ imports:
@@ -130,6 +132,7 @@ src/main/services/ (new)
 ```
 
 ### Phase 03: Camoufox Integration ✓ COMPLETE
+
 ```
 src/main/ipc-handlers.ts ✓
 ├─ imports: browserService from ./services/browser-service.ts
@@ -172,17 +175,18 @@ src/main/index.ts ✓ (modified)
 
 ```typescript
 // Domain entities (single source of truth)
-Profile, Group, Proxy, Session, Fingerprint, BrowserStatus
+;(Profile, Group, Proxy, Session, Fingerprint, BrowserStatus)
 
 // Input types (prevent IDOR attacks)
-CreateProfileInput    // Omits: id, created_at, updated_at
-UpdateProfileInput    // Omits: id, created_at
-CreateGroupInput      // name, color?
-UpdateGroupInput      // name?, color? (all optional)
-CreateProxyInput      // Omits: id, created_at
+CreateProfileInput // Omits: id, created_at, updated_at
+UpdateProfileInput // Omits: id, created_at
+CreateGroupInput // name, color?
+UpdateGroupInput // name?, color? (all optional)
+CreateProxyInput // Omits: id, created_at
 ```
 
 **Usage:**
+
 - **Main process:** Uses shared types + adds DB-specific fields if needed
 - **Renderer:** Uses shared types for API responses, CreateInput types for form data
 - **Preload:** Passes types through unchanged (no transformation)
@@ -191,15 +195,16 @@ CreateProxyInput      // Omits: id, created_at
 
 ## Security Layers
 
-| Layer | Mechanism | Prevents |
-|-------|-----------|----------|
-| **contextIsolation** | Preload in isolated context | Renderer accessing Node APIs directly |
-| **nodeIntegration: false** | Disable require() in renderer | RCE via malicious JS injection |
-| **ipcRenderer validation** | Whitelist valid channels | Renderer invoking arbitrary IPC handlers |
-| **Input validation** | Service layer type checking | SQL injection, XSS, malformed data |
-| **Type omission** | CreateInput excludes id/timestamps | IDOR (modifying created_at, assuming IDs) |
+| Layer                      | Mechanism                          | Prevents                                  |
+| -------------------------- | ---------------------------------- | ----------------------------------------- |
+| **contextIsolation**       | Preload in isolated context        | Renderer accessing Node APIs directly     |
+| **nodeIntegration: false** | Disable require() in renderer      | RCE via malicious JS injection            |
+| **ipcRenderer validation** | Whitelist valid channels           | Renderer invoking arbitrary IPC handlers  |
+| **Input validation**       | Service layer type checking        | SQL injection, XSS, malformed data        |
+| **Type omission**          | CreateInput excludes id/timestamps | IDOR (modifying created_at, assuming IDs) |
 
 **Phase 01 Trade-off:**
+
 - `sandbox: false` — Preload needs Node APIs (child_process) for Camoufox spawn
   - Acceptable: preload code is trusted (not user-provided)
   - Revisit after Phase 03 architecture finalized
@@ -227,17 +232,20 @@ dtc-login/
 ## Deployment Architecture
 
 ### Windows
+
 - **Installer:** NSIS (electron-builder)
 - **Auto-update:** electron-updater checks release endpoint
 - **Resources:** `\camoufox\win32\` bundled in installer
 
 ### macOS
+
 - **Installer:** DMG
 - **Code signing:** Requires identity (Phase 07)
 - **Notarization:** Deferred (Phase 07)
 - **Resources:** `camoufox/darwin/` in app bundle
 
 ### Linux
+
 - **Installer:** AppImage (single self-contained binary)
 - **Resources:** `camoufox/linux/` in AppImage
 
@@ -264,16 +272,19 @@ dtc-login/
 ## Known Issues & Tech Debt
 
 ### npm audit (14 vulnerabilities)
+
 - Source: electron-builder, eslint v8 (transitive deps)
 - Impact: Development only (not runtime)
 - Mitigation: Address before Phase 07 (production packaging)
 
 ### Camoufox Resource Bundling (Phase 03)
+
 - Path: `resources/camoufox/{os}/{arch}/camoufox-binary`
 - Must test on each platform early (Phase 03)
 - electron-builder extraResources filtering may need adjustment
 
 ### Sandbox Mode Trade-off
+
 - Current: `sandbox: false` for preload Node access
 - Issue: Preload has elevated privileges
 - Mitigation: Only trusted code in preload; revisit after Phase 03
@@ -283,11 +294,13 @@ dtc-login/
 ## Completed Architecture Changes
 
 **Phase 02:** ✓ SQLite layer
+
 - ✓ `src/main/db/` (schema, migrations, queries)
 - ✓ `src/main/services/` (Profile, Group, Proxy services)
 - ✓ `src/main/ipc-handlers.ts` (implementations)
 
 **Phase 03:** ✓ Camoufox integration
+
 - ✓ `src/main/services/browser-service.ts` (process management)
 - ✓ `src/main/services/fingerprint-service.ts` (fingerprint generation)
 - ✓ `src/main/utils/port-finder.ts` (port detection)
@@ -297,9 +310,10 @@ dtc-login/
 
 ## Next Architecture Changes
 
-**Phase 04:** React UI
-- New: `src/renderer/src/pages/` (ProfileList, ProfileDetail, Create)
-- New: `src/renderer/src/components/` (ProfileCard, GroupNav, ProxyManager)
-- New: `src/renderer/src/hooks/` (useProfiles, useBrowser, useGroups)
-- New: `src/renderer/src/stores/` (Zustand profile/browser stores)
-- Modified: `src/renderer/src/App.tsx` (layout, routing)
+**Phase 04:** React UI (COMPLETE)
+
+- New: `src/renderer/src/pages/` (Profiles, Proxies, Settings) with dialogs/forms
+- New: `src/renderer/src/components/` (Sidebar, ProfileTable, ProfileFormDialog, ProxyFormDialog, FingerprintEditor)
+- New: `src/renderer/src/hooks/` (use-ipc.ts wrappers for profiles/groups/proxies/browser)
+- New: `src/renderer/src/stores/` (Zustand profile store with sessions/selection)
+- Modified: `src/renderer/src/App.tsx` (layout, routing, theme, browser status listener)

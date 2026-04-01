@@ -16,30 +16,30 @@ Phase 03 (Camoufox Browser Launcher) successfully implemented with all deliverab
 
 ### Code Files Created
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `src/main/utils/port-finder.ts` | Find free TCP port via net.Server | ✓ |
-| `src/main/utils/camoufox-path.ts` | Platform-specific binary path resolver (dev + prod) | ✓ |
-| `src/main/services/fingerprint-service.ts` | Browser fingerprint generator using @apify/fingerprint-generator | ✓ |
-| `src/main/services/browser-service.ts` | Camoufox spawn/stop/track/cleanup (core service) | ✓ |
-| `scripts/download-camoufox.ts` | Download platform-specific Camoufox binaries from GitHub releases | ✓ |
+| File                                       | Purpose                                                           | Status |
+| ------------------------------------------ | ----------------------------------------------------------------- | ------ |
+| `src/main/utils/port-finder.ts`            | Find free TCP port via net.Server                                 | ✓      |
+| `src/main/utils/camoufox-path.ts`          | Platform-specific binary path resolver (dev + prod)               | ✓      |
+| `src/main/services/fingerprint-service.ts` | Browser fingerprint generator using @apify/fingerprint-generator  | ✓      |
+| `src/main/services/browser-service.ts`     | Camoufox spawn/stop/track/cleanup (core service)                  | ✓      |
+| `scripts/download-camoufox.ts`             | Download platform-specific Camoufox binaries from GitHub releases | ✓      |
 
 ### Code Files Modified
 
-| File | Change | Status |
-|------|--------|--------|
-| `src/main/ipc-handlers.ts` | Added browser:start/stop/status handlers (replaced stubs) | ✓ |
-| `src/main/index.ts` | Added app.on('before-quit') → browserService.stopAll() | ✓ |
-| `package.json` | Added @apify/fingerprint-generator dep + download-camoufox npm scripts | ✓ |
+| File                       | Change                                                                 | Status |
+| -------------------------- | ---------------------------------------------------------------------- | ------ |
+| `src/main/ipc-handlers.ts` | Added browser:start/stop/status handlers (replaced stubs)              | ✓      |
+| `src/main/index.ts`        | Added app.on('before-quit') → browserService.stopAll()                 | ✓      |
+| `package.json`             | Added @apify/fingerprint-generator dep + download-camoufox npm scripts | ✓      |
 
 ### Documentation Updated
 
-| File | Change | Status |
-|------|--------|--------|
-| `plans/260401-0907-antidetect-browser-vn/phase-03-camoufox-browser-launcher.md` | Status → complete, all todos checked | ✓ |
-| `plans/260401-0907-antidetect-browser-vn/plan.md` | Phase 03 status → complete in phases table | ✓ |
-| `docs/codebase-summary.md` | Updated phase to 03, added Phase 03 deliverables section | ✓ |
-| `docs/system-architecture.md` | Updated Phase 03 section with ✓ markers, noted completion status | ✓ |
+| File                                                                            | Change                                                           | Status |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| `plans/260401-0907-antidetect-browser-vn/phase-03-camoufox-browser-launcher.md` | Status → complete, all todos checked                             | ✓      |
+| `plans/260401-0907-antidetect-browser-vn/plan.md`                               | Phase 03 status → complete in phases table                       | ✓      |
+| `docs/codebase-summary.md`                                                      | Updated phase to 03, added Phase 03 deliverables section         | ✓      |
+| `docs/system-architecture.md`                                                   | Updated Phase 03 section with ✓ markers, noted completion status | ✓      |
 
 ---
 
@@ -48,6 +48,7 @@ Phase 03 (Camoufox Browser Launcher) successfully implemented with all deliverab
 ### Browser Launcher Service (`browser-service.ts`)
 
 **Core Methods:**
+
 - `start(profileId)` — Launches Camoufox with unique debug port, fingerprint env var, proxy config
 - `stop(profileId)` — Terminates process, cleans up session DB record
 - `stopAll()` — Bulk cleanup on app exit
@@ -55,6 +56,7 @@ Phase 03 (Camoufox Browser Launcher) successfully implemented with all deliverab
 - `isRunning(profileId)` — Boolean check
 
 **Lifecycle:**
+
 1. Check if profile already running
 2. Create isolated profile data directory
 3. Find free debug port (9222+)
@@ -120,17 +122,17 @@ Ensures all Camoufox processes terminate cleanly on app exit (no zombie processe
 
 ## Test Coverage (All Tests Passed)
 
-| Test | Scenario | Validation |
-|------|----------|-----------|
-| Single profile launch | Start Camoufox, fingerprint applied | Process running, CDP endpoint accessible |
-| Multi-profile (3x) | 3 profiles on different ports | 3 distinct processes, isolated cookies/storage |
-| Port isolation | Port conflicts handled | Port finder auto-increments on conflict |
-| Session persistence | Browser session saved to DB | SQLite record includes PID, port, WebSocket URL |
-| Unexpected exit | Process killed externally | Session record auto-cleaned, status event sent |
-| App exit cleanup | App.quit() triggered | All Camoufox processes terminated, no orphans |
-| Proxy injection | Profile with proxy config | Proxy args passed to Camoufox spawn |
-| Fingerprint injection | Custom fingerprint generated | CAMOUFOX_FINGERPRINT env var set correctly |
-| CDP connectivity | Playwright/Selenium connect | WebSocket endpoint valid, browser accepts connections |
+| Test                  | Scenario                            | Validation                                            |
+| --------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Single profile launch | Start Camoufox, fingerprint applied | Process running, CDP endpoint accessible              |
+| Multi-profile (3x)    | 3 profiles on different ports       | 3 distinct processes, isolated cookies/storage        |
+| Port isolation        | Port conflicts handled              | Port finder auto-increments on conflict               |
+| Session persistence   | Browser session saved to DB         | SQLite record includes PID, port, WebSocket URL       |
+| Unexpected exit       | Process killed externally           | Session record auto-cleaned, status event sent        |
+| App exit cleanup      | App.quit() triggered                | All Camoufox processes terminated, no orphans         |
+| Proxy injection       | Profile with proxy config           | Proxy args passed to Camoufox spawn                   |
+| Fingerprint injection | Custom fingerprint generated        | CAMOUFOX_FINGERPRINT env var set correctly            |
+| CDP connectivity      | Playwright/Selenium connect         | WebSocket endpoint valid, browser accepts connections |
 
 ---
 
@@ -150,13 +152,13 @@ Ensures all Camoufox processes terminate cleanly on app exit (no zombie processe
 
 ## Risk Resolution
 
-| Original Risk | Mitigation Implemented | Status |
-|---------------|----------------------|--------|
-| Camoufox binary size (~200MB/platform) | Separate download script, selective bundling in builds | ✓ |
-| CAMOUFOX_FINGERPRINT format compatibility | Pinned version, tested with coryking/camoufox v0.4.2 | ✓ |
-| macOS code signing (unsigned binary) | Deferred to Phase 07, dev workaround documented | ✓ |
-| Port conflicts from multiple apps | Recursive port finder with auto-increment | ✓ |
-| Process leaks on crash | DB cleanup on exit, session table tracks active pids | ✓ |
+| Original Risk                             | Mitigation Implemented                                 | Status |
+| ----------------------------------------- | ------------------------------------------------------ | ------ |
+| Camoufox binary size (~200MB/platform)    | Separate download script, selective bundling in builds | ✓      |
+| CAMOUFOX_FINGERPRINT format compatibility | Pinned version, tested with coryking/camoufox v0.4.2   | ✓      |
+| macOS code signing (unsigned binary)      | Deferred to Phase 07, dev workaround documented        | ✓      |
+| Port conflicts from multiple apps         | Recursive port finder with auto-increment              | ✓      |
+| Process leaks on crash                    | DB cleanup on exit, session table tracks active pids   | ✓      |
 
 ---
 
@@ -206,18 +208,19 @@ A scripts/download-camoufox.ts               # NEW
 
 ## Known Limitations & Tech Debt
 
-| Item | Severity | Action |
-|------|----------|--------|
-| npm audit 14 vulnerabilities (transitive) | Low | Address Phase 07 (pre-production) |
-| Camoufox fork maintenance (original maintainer hospitalized) | Low | Monitor coryking/camoufox releases, upgrade as needed |
-| macOS notarization not handled | Medium | Phase 07 (code signing + notarization) |
-| Windows SmartScreen (unsigned binary) | Medium | Phase 07 (code signing) |
+| Item                                                         | Severity | Action                                                |
+| ------------------------------------------------------------ | -------- | ----------------------------------------------------- |
+| npm audit 14 vulnerabilities (transitive)                    | Low      | Address Phase 07 (pre-production)                     |
+| Camoufox fork maintenance (original maintainer hospitalized) | Low      | Monitor coryking/camoufox releases, upgrade as needed |
+| macOS notarization not handled                               | Medium   | Phase 07 (code signing + notarization)                |
+| Windows SmartScreen (unsigned binary)                        | Medium   | Phase 07 (code signing)                               |
 
 ---
 
 ## Conclusion
 
 Phase 03 successfully delivers a production-ready browser launcher with:
+
 - Robust process lifecycle management
 - Realistic fingerprint injection
 - Full CDP protocol support for Playwright/Selenium

@@ -1,12 +1,14 @@
 # Phase 08: Launch & Marketing VN
 
 ## Overview
+
 - **Priority:** P3
 - **Status:** pending
 - **Depends on:** Phase 07
 - **Timeline:** Month 11-12 (~20h dev + ongoing marketing)
 
 ## Goal
+
 Public launch targeting Vietnamese MMO/affiliate/e-commerce community. First 100 paying users. Community building.
 
 ---
@@ -14,6 +16,7 @@ Public launch targeting Vietnamese MMO/affiliate/e-commerce community. First 100
 ## Pre-Launch Checklist
 
 ### Technical
+
 - [ ] Code signing: Windows (EV certificate hoặc standard) + macOS (Developer ID)
 - [ ] macOS notarization (để Gatekeeper không chặn)
 - [ ] Windows installer (NSIS) signed
@@ -24,6 +27,7 @@ Public launch targeting Vietnamese MMO/affiliate/e-commerce community. First 100
 - [ ] Landing page live
 
 ### Content
+
 - [ ] Landing page (dtcbrowser.com hoặc tương tự)
 - [ ] YouTube: 1-2 tutorial videos tiếng Việt
 - [ ] Docs site: setup guide, API reference, FAQ
@@ -36,27 +40,32 @@ Public launch targeting Vietnamese MMO/affiliate/e-commerce community. First 100
 ### Primary Channels
 
 **1. Facebook Groups (most important)**
+
 - Target groups: MMO Việt Nam, Affiliate Marketing VN, Làm giàu Online, TikTok Shop Việt Nam
 - Content: Tutorial posts, comparison with AdsPower (price + VN support)
 - Seeding: 10-20 posts/tháng, answer questions proactively
 
 **2. Zalo Groups**
+
 - Create official Zalo group cho users
 - Direct support qua Zalo OA
 - VN users prefer Zalo >> email for support
 
 **3. YouTube**
+
 - Tutorial: "Cách tạo 20 tài khoản Facebook không bị khóa"
 - Demo: "DTC Browser vs AdsPower - So sánh giá + tính năng"
 - SEO: Vietnamese keywords
 
 **4. TikTok** (thứ cấp)
+
 - Short demo videos (30-60s)
 - Show profile management, fingerprint features
 
 ### Pricing Strategy
 
-**Launch offer:** 
+**Launch offer:**
+
 - 3 tháng đầu: Free plan 10 profiles (double normal)
 - Starter: 50k VND/tháng (giảm từ 70k) trong 6 tháng đầu
 - Lifetime deal cho 50 user đầu tiên: 500k VND
@@ -103,14 +112,14 @@ Response time target:
 
 ## Launch Metrics (Month 12 targets)
 
-| Metric | Target |
-|--------|--------|
-| Free users registered | 500 |
-| Paid users | 100 |
-| Monthly revenue | ~7-10M VND (~$300-400) |
-| Zalo group members | 300+ |
-| YouTube subscribers | 500+ |
-| Churn rate | < 15%/tháng |
+| Metric                | Target                 |
+| --------------------- | ---------------------- |
+| Free users registered | 500                    |
+| Paid users            | 100                    |
+| Monthly revenue       | ~7-10M VND (~$300-400) |
+| Zalo group members    | 300+                   |
+| YouTube subscribers   | 500+                   |
+| Churn rate            | < 15%/tháng            |
 
 ---
 
@@ -125,9 +134,11 @@ if (!isDev) {
     dsn: process.env.SENTRY_DSN,
     // Only send if user opted in
     beforeSend: (event) => {
-      const optIn = db.prepare("SELECT value FROM settings WHERE key='analytics_optin'").get()?.value
+      const optIn = db
+        .prepare("SELECT value FROM settings WHERE key='analytics_optin'")
+        .get()?.value
       return optIn === 'true' ? event : null
-    }
+    },
   })
 }
 ```
@@ -136,14 +147,14 @@ if (!isDev) {
 
 ## Files to Create
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/main/index.ts` | modify | Add Sentry crash reporting |
-| `src/renderer/src/pages/settings-page.tsx` | modify | Analytics opt-in toggle |
-| `build/entitlements.mac.plist` | create | macOS notarization entitlements |
-| `build/icon.png` | create | App icon (1024x1024) |
-| `docs/setup-guide-vi.md` | create | Vietnamese setup guide |
-| `docs/local-api.md` | create | API documentation |
+| File                                       | Action | Description                     |
+| ------------------------------------------ | ------ | ------------------------------- |
+| `src/main/index.ts`                        | modify | Add Sentry crash reporting      |
+| `src/renderer/src/pages/settings-page.tsx` | modify | Analytics opt-in toggle         |
+| `build/entitlements.mac.plist`             | create | macOS notarization entitlements |
+| `build/icon.png`                           | create | App icon (1024x1024)            |
+| `docs/setup-guide-vi.md`                   | create | Vietnamese setup guide          |
+| `docs/local-api.md`                        | create | API documentation               |
 
 ---
 

@@ -22,27 +22,35 @@ function isBlockedHost(host: string): boolean {
 
 export const proxyService = {
   list(): Proxy[] {
-    return getDb().prepare('SELECT * FROM proxies ORDER BY created_at DESC').all() as Proxy[]
+    return getDb()
+      .prepare('SELECT * FROM proxies ORDER BY created_at DESC')
+      .all() as Proxy[]
   },
 
   getById(id: string): Proxy | null {
-    return (getDb().prepare('SELECT * FROM proxies WHERE id = ?').get(id) as Proxy | undefined) ?? null
+    return (
+      (getDb().prepare('SELECT * FROM proxies WHERE id = ?').get(id) as
+        | Proxy
+        | undefined) ?? null
+    )
   },
 
   create(input: CreateProxyInput): Proxy {
     const db = getDb()
     const id = uuidv4()
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO proxies (id, name, type, host, port, username, password)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       id,
       input.name ?? null,
       input.type,
       input.host,
       input.port,
       input.username ?? null,
-      input.password ?? null,
+      input.password ?? null
     )
     const created = this.getById(id)
     if (!created) throw new Error(`Proxy ${id} not found after insert`)
@@ -56,9 +64,13 @@ export const proxyService = {
   /** TCP connect check — verifies proxy host:port is reachable within 5s */
   test(id: string): Promise<{ ok: boolean; message: string }> {
     const proxy = this.getById(id)
-    if (!proxy) return Promise.resolve({ ok: false, message: 'Proxy not found' })
+    if (!proxy)
+      return Promise.resolve({ ok: false, message: 'Proxy not found' })
     if (isBlockedHost(proxy.host)) {
-      return Promise.resolve({ ok: false, message: 'Host is in a blocked private range' })
+      return Promise.resolve({
+        ok: false,
+        message: 'Host is in a blocked private range',
+      })
     }
 
     return new Promise((resolve) => {
@@ -69,7 +81,10 @@ export const proxyService = {
 
       socket.connect(proxy.port, proxy.host, () => {
         socket.destroy()
-        resolve({ ok: true, message: `Connected to ${proxy.host}:${proxy.port}` })
+        resolve({
+          ok: true,
+          message: `Connected to ${proxy.host}:${proxy.port}`,
+        })
       })
 
       socket.on('error', (err) => {

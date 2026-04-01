@@ -14,7 +14,13 @@ export function getCamoufoxBinaryPath(): string {
   const platformDir = `${platform}-${arch}`
 
   // Development: relative to project root
-  const devPath = join(process.cwd(), 'resources', 'camoufox', platformDir, binaryName)
+  const devPath = join(
+    process.cwd(),
+    'resources',
+    'camoufox',
+    platformDir,
+    binaryName
+  )
   if (existsSync(devPath)) return devPath
 
   // Production: extraResources land at:
@@ -29,6 +35,6 @@ export function getCamoufoxBinaryPath(): string {
   if (existsSync(prodPath)) return prodPath
 
   throw new Error(
-    `Camoufox binary not found for ${platformDir}. Run: npm run download-camoufox`,
+    `Camoufox binary not found for ${platformDir}. Run: npm run download-camoufox`
   )
 }

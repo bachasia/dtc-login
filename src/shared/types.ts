@@ -59,7 +59,9 @@ export interface BrowserStatus {
 }
 
 // Exclude server-generated fields — prevents renderer from overwriting existing record IDs (IDOR)
-export type CreateProfileInput = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>> & { name: string }
+export type CreateProfileInput = Partial<
+  Omit<Profile, 'id' | 'created_at' | 'updated_at'>
+> & { name: string }
 export type UpdateProfileInput = Partial<Omit<Profile, 'id' | 'created_at'>>
 
 export type CreateGroupInput = { name: string; color?: string }
