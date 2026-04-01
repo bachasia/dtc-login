@@ -33,14 +33,18 @@ export const browserService = {
     if (profile.proxy_id) {
       const proxy = proxyService.getById(profile.proxy_id)
       if (proxy) {
-        const auth = proxy.username ? `${proxy.username}:${proxy.password}@` : ''
+        const auth = proxy.username
+          ? `${proxy.username}:${proxy.password}@`
+          : ''
         proxyArg = `${proxy.type}://${auth}${proxy.host}:${proxy.port}`
       }
     }
 
     const args = [
-      '--remote-debugging-port', String(debugPort),
-      '--profile', profileDir,
+      '--remote-debugging-port',
+      String(debugPort),
+      '--profile',
+      profileDir,
       '--no-first-run',
       '--no-default-browser-check',
     ]
@@ -49,16 +53,37 @@ export const browserService = {
     // Inject fingerprint — Camoufox reads this env var at startup and applies at C++ level
     const camoufoxEnv: NodeJS.ProcessEnv = { ...process.env }
     if (profile.fingerprint.raw) {
-      camoufoxEnv['CAMOUFOX_FINGERPRINT'] = JSON.stringify(profile.fingerprint.raw)
+      camoufoxEnv['CAMOUFOX_FINGERPRINT'] = JSON.stringify(
+        profile.fingerprint.raw
+      )
     }
 
     const binaryPath = getCamoufoxBinaryPath()
     const proc = spawn(binaryPath, args, { env: camoufoxEnv, detached: false })
     runningProcesses.set(profileId, proc)
 
+    const spawnErrorPromise = new Promise<never>((_resolve, reject) => {
+      proc.once('error', (err) => {
+        if (runningProcesses.get(profileId) === proc) {
+          runningProcesses.delete(profileId)
+          cleanupStoppedSession(profileId, false)
+        }
+        reject(err)
+      })
+    })
+
+    proc.on('exit', () => {
+      if (runningProcesses.get(profileId) !== proc) return
+      runningProcesses.delete(profileId)
+      cleanupStoppedSession(profileId, true)
+    })
+
     let wsEndpoint: string
     try {
-      wsEndpoint = await waitForBrowserReady(debugPort)
+      wsEndpoint = await Promise.race([
+        waitForBrowserReady(debugPort),
+        spawnErrorPromise,
+      ])
     } catch (err) {
       proc.kill('SIGTERM')
       runningProcesses.delete(profileId)
@@ -66,40 +91,51 @@ export const browserService = {
     }
 
     const db = getDb()
-    db.prepare(`
+    db.prepare(
+      `
       INSERT OR REPLACE INTO sessions (profile_id, pid, debug_port, ws_endpoint)
       VALUES (?, ?, ?, ?)
-    `).run(profileId, proc.pid ?? null, debugPort, wsEndpoint)
+    `
+    ).run(profileId, proc.pid ?? null, debugPort, wsEndpoint)
 
-    proc.on('exit', () => {
-      runningProcesses.delete(profileId)
-      getDb().prepare('DELETE FROM sessions WHERE profile_id = ?').run(profileId)
-      broadcastStatus(profileId, 'stopped')
-    })
-
-    broadcastStatus(profileId, 'running')
-    return this.getSession(profileId)!
+    const session = this.getSession(profileId)!
+    broadcastStatus(profileId, 'running', session)
+    return session
   },
 
-  stop(profileId: string): void {
+  async stop(profileId: string): Promise<void> {
     const proc = runningProcesses.get(profileId)
-    if (proc) {
-      proc.kill('SIGTERM')
-      runningProcesses.delete(profileId)
+    if (!proc) {
+      if (this.getSession(profileId)) cleanupStoppedSession(profileId, true)
+      return
     }
-    getDb().prepare('DELETE FROM sessions WHERE profile_id = ?').run(profileId)
-    broadcastStatus(profileId, 'stopped')
+
+    proc.kill('SIGTERM')
+    const exitedAfterTerm = await waitForProcessExit(proc, 5000)
+    if (exitedAfterTerm) return
+
+    const killSignal = proc.kill('SIGKILL')
+    if (!killSignal) {
+      if (proc.exitCode !== null || proc.signalCode !== null) return
+      throw new Error(`Cannot force stop browser for profile ${profileId}`)
+    }
+    const exitedAfterKill = await waitForProcessExit(proc, 2000)
+    if (exitedAfterKill) return
+
+    runningProcesses.delete(profileId)
+    cleanupStoppedSession(profileId, true)
   },
 
-  stopAll(): void {
-    for (const [profileId] of runningProcesses) {
-      this.stop(profileId)
-    }
+  async stopAll(): Promise<void> {
+    const profileIds = Array.from(runningProcesses.keys())
+    await Promise.all(profileIds.map((profileId) => this.stop(profileId)))
   },
 
   getSession(profileId: string): Session | null {
     return (
-      (getDb().prepare('SELECT * FROM sessions WHERE profile_id = ?').get(profileId) as Session | undefined) ?? null
+      (getDb()
+        .prepare('SELECT * FROM sessions WHERE profile_id = ?')
+        .get(profileId) as Session | undefined) ?? null
     )
   },
 
@@ -111,7 +147,10 @@ export const browserService = {
 /**
  * Poll CDP /json/version until the browser responds or timeout elapses.
  */
-async function waitForBrowserReady(port: number, timeoutMs = 10_000): Promise<string> {
+async function waitForBrowserReady(
+  port: number,
+  timeoutMs = 10_000
+): Promise<string> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
     try {
@@ -125,11 +164,50 @@ async function waitForBrowserReady(port: number, timeoutMs = 10_000): Promise<st
     }
     await new Promise((r) => setTimeout(r, 200))
   }
-  throw new Error(`Camoufox did not start on port ${port} within ${timeoutMs}ms`)
+  throw new Error(
+    `Camoufox did not start on port ${port} within ${timeoutMs}ms`
+  )
 }
 
-function broadcastStatus(profileId: string, status: 'running' | 'stopped'): void {
+function waitForProcessExit(
+  proc: ChildProcess,
+  timeoutMs: number
+): Promise<boolean> {
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return Promise.resolve(true)
+  }
+
+  return new Promise((resolve) => {
+    const onExit = (): void => {
+      clearTimeout(timer)
+      resolve(true)
+    }
+    const timer = setTimeout(() => {
+      proc.removeListener('exit', onExit)
+      resolve(false)
+    }, timeoutMs)
+    proc.once('exit', onExit)
+  })
+}
+
+function cleanupStoppedSession(
+  profileId: string,
+  shouldBroadcast: boolean
+): void {
+  getDb().prepare('DELETE FROM sessions WHERE profile_id = ?').run(profileId)
+  if (shouldBroadcast) broadcastStatus(profileId, 'stopped', null)
+}
+
+function broadcastStatus(
+  profileId: string,
+  status: 'running' | 'stopped',
+  session: Session | null
+): void {
   BrowserWindow.getAllWindows().forEach((win) => {
-    win.webContents.send('browser:status-changed', { profileId, status })
+    win.webContents.send('browser:status-changed', {
+      profileId,
+      status,
+      session,
+    })
   })
 }

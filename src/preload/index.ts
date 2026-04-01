@@ -6,14 +6,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     list: (groupId?: string) => ipcRenderer.invoke('profiles:list', groupId),
     get: (id: string) => ipcRenderer.invoke('profiles:get', id),
     create: (data: unknown) => ipcRenderer.invoke('profiles:create', data),
-    update: (id: string, data: unknown) => ipcRenderer.invoke('profiles:update', id, data),
+    update: (id: string, data: unknown) =>
+      ipcRenderer.invoke('profiles:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('profiles:delete', id),
-    bulkDelete: (ids: string[]) => ipcRenderer.invoke('profiles:bulk-delete', ids),
+    bulkDelete: (ids: string[]) =>
+      ipcRenderer.invoke('profiles:bulk-delete', ids),
   },
   groups: {
     list: () => ipcRenderer.invoke('groups:list'),
     create: (data: unknown) => ipcRenderer.invoke('groups:create', data),
-    update: (id: string, data: unknown) => ipcRenderer.invoke('groups:update', id, data),
+    update: (id: string, data: unknown) =>
+      ipcRenderer.invoke('groups:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('groups:delete', id),
   },
   proxies: {
@@ -23,15 +26,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (id: string) => ipcRenderer.invoke('proxies:delete', id),
   },
   browser: {
-    start: (profileId: string) => ipcRenderer.invoke('browser:start', profileId),
+    start: (profileId: string) =>
+      ipcRenderer.invoke('browser:start', profileId),
     stop: (profileId: string) => ipcRenderer.invoke('browser:stop', profileId),
-    status: (profileId: string) => ipcRenderer.invoke('browser:status', profileId),
+    status: (profileId: string) =>
+      ipcRenderer.invoke('browser:status', profileId),
+  },
+  fingerprints: {
+    generate: (input?: {
+      os?: Array<'windows' | 'macos' | 'linux'>
+      locale?: string
+    }) => ipcRenderer.invoke('fingerprints:generate', input),
   },
   // Returns an unsubscribe function to prevent listener leaks in React useEffect teardowns
   on: (channel: string, cb: (...args: unknown[]) => void): (() => void) => {
     const validChannels = ['browser:status-changed', 'app:update-available']
     if (!validChannels.includes(channel)) return () => void 0
-    const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => cb(...args)
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      ...args: unknown[]
+    ): void => cb(...args)
     ipcRenderer.on(channel, listener)
     return () => ipcRenderer.removeListener(channel, listener)
   },

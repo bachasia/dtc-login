@@ -52,7 +52,9 @@ app.whenReady().then(() => {
 })
 
 app.on('before-quit', () => {
-  browserService.stopAll()
+  void browserService.stopAll().catch((err) => {
+    console.error('[before-quit:stopAll]', err)
+  })
 })
 
 app.on('window-all-closed', () => {
