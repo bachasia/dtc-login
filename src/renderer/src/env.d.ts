@@ -15,6 +15,28 @@ interface Window {
       ) => Promise<import('@shared/types').Profile>
       delete: (id: string) => Promise<void>
       bulkDelete: (ids: string[]) => Promise<void>
+      templates: () =>
+        Promise<
+          Array<{
+            id: string
+            name: string
+            description: string
+            fingerprint: import('@shared/types').Fingerprint
+          }>
+        >
+      pickCookieFile: () => Promise<{
+        success: boolean
+        filePath?: string
+        error?: string
+      }>
+      importCookies: (
+        profileId: string,
+        filePath: string
+      ) => Promise<{
+        success: boolean
+        result?: { imported: number }
+        error?: string
+      }>
     }
     groups: {
       list: () => Promise<import('@shared/types').Group[]>
@@ -75,6 +97,30 @@ interface Window {
         error?: string
       }>
       testStatus: () => Promise<{ ok: boolean; message: string }>
+    }
+    camoufox: {
+      status: () => Promise<{
+        installed: boolean
+        platform: string
+        arch: string
+        platformDir: string
+        binaryName: string
+        binaryPath: string | null
+        source: 'userData' | 'devResources' | 'bundledResources' | null
+      }>
+      downloadCurrent: () => Promise<{
+        success: boolean
+        status?: {
+          installed: boolean
+          platform: string
+          arch: string
+          platformDir: string
+          binaryName: string
+          binaryPath: string | null
+          source: 'userData' | 'devResources' | 'bundledResources' | null
+        }
+        error?: string
+      }>
     }
     // Returns unsubscribe function — call in useEffect cleanup to prevent listener leaks
     on: (

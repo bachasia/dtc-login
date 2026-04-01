@@ -5,6 +5,8 @@ interface ProfileTableProps {
   profiles: Profile[]
   loading: boolean
   onEdit: (profile: Profile) => void
+  onClone: (profile: Profile) => void
+  onImportCookies: (profile: Profile) => void
   onDelete: (profileId: string) => void
   onStartBrowser: (profileId: string) => void
   onStopBrowser: (profileId: string) => void
@@ -14,6 +16,8 @@ export function ProfileTable({
   profiles,
   loading,
   onEdit,
+  onClone,
+  onImportCookies,
   onDelete,
   onStartBrowser,
   onStopBrowser,
@@ -89,6 +93,18 @@ export function ProfileTable({
                       onClick={() => onEdit(profile)}
                     >
                       Sửa
+                    </button>
+                    <button
+                      className="ghost-btn"
+                      onClick={() => onClone(profile)}
+                    >
+                      Clone
+                    </button>
+                    <button
+                      className="ghost-btn"
+                      onClick={() => onImportCookies(profile)}
+                    >
+                      Import Cookie
                     </button>
                     <button
                       className="danger-btn"

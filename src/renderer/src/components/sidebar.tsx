@@ -1,4 +1,12 @@
 import { useEffect, useState } from 'react'
+import {
+  FolderTree,
+  Plus,
+  Settings,
+  Shield,
+  UserCircle2,
+  Waypoints,
+} from 'lucide-react'
 import { useCreateGroup, useGroups } from '../hooks/use-ipc'
 import { useProfileStore } from '../stores/profile-store'
 
@@ -31,7 +39,10 @@ export function Sidebar({ page, onChangePage }: SidebarProps): JSX.Element {
   return (
     <aside className="sidebar">
       <div>
-        <h1 className="logo">DTC Browser</h1>
+        <h1 className="logo logo-row">
+          <Shield size={22} strokeWidth={2} />
+          <span>DTC Browser</span>
+        </h1>
         <p className="muted">Antidetect cho thị trường Việt Nam</p>
       </div>
 
@@ -40,27 +51,31 @@ export function Sidebar({ page, onChangePage }: SidebarProps): JSX.Element {
           className={page === 'profiles' ? 'nav-button active' : 'nav-button'}
           onClick={() => onChangePage('profiles')}
         >
-          Profiles
+          <UserCircle2 size={16} strokeWidth={2} />
+          <span>Profiles</span>
         </button>
         <button
           className={page === 'proxies' ? 'nav-button active' : 'nav-button'}
           onClick={() => onChangePage('proxies')}
         >
-          Proxies
+          <Waypoints size={16} strokeWidth={2} />
+          <span>Proxies</span>
         </button>
         <button
           className={page === 'settings' ? 'nav-button active' : 'nav-button'}
           onClick={() => onChangePage('settings')}
         >
-          Cài đặt
+          <Settings size={16} strokeWidth={2} />
+          <span>Cài đặt</span>
         </button>
       </nav>
 
       <div className="group-box">
         <div className="group-row">
           <h3 className="section-title">Nhóm</h3>
-          <button className="ghost-btn" onClick={() => setSelectedGroup(null)}>
-            Tất cả
+          <button className="ghost-btn ghost-btn-inline" onClick={() => setSelectedGroup(null)}>
+            <FolderTree size={15} strokeWidth={2} />
+            <span>Tất cả</span>
           </button>
         </div>
 
@@ -93,8 +108,8 @@ export function Sidebar({ page, onChangePage }: SidebarProps): JSX.Element {
               if (event.key === 'Enter') void handleAddGroup()
             }}
           />
-          <button className="primary-btn" onClick={() => void handleAddGroup()}>
-            +
+          <button className="primary-btn btn-icon-only" onClick={() => void handleAddGroup()}>
+            <Plus size={15} strokeWidth={2.5} />
           </button>
         </div>
       </div>

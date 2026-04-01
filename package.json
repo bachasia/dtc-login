@@ -10,6 +10,7 @@
     "package": "electron-vite build && electron-builder",
     "download-camoufox": "npx ts-node scripts/download-camoufox.ts",
     "download-camoufox:current": "npx ts-node scripts/download-camoufox.ts --current",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write ."
   },
@@ -30,6 +31,7 @@
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
     "@electron-toolkit/eslint-config-ts": "^2.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@electron/rebuild": "^4.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

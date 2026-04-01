@@ -1,10 +1,16 @@
-import { ipcMain } from 'electron'
+import { dialog, ipcMain } from 'electron'
 import { profileService } from './services/profile-service'
 import { groupService } from './services/group-service'
 import { proxyService } from './services/proxy-service'
 import { browserService } from './services/browser-service'
 import { generateFingerprint } from './services/fingerprint-service'
 import { localApiService } from './services/local-api-service'
+import {
+  downloadCamoufoxForCurrentPlatform,
+  getCamoufoxStatus,
+} from './utils/camoufox-path'
+import { PROFILE_TEMPLATES } from './data/profile-templates'
+import { cookieService } from './services/cookie-service'
 
 // Guard helpers — reject malformed renderer input before it reaches DB layer
 function assertString(v: unknown, field: string): string {
@@ -266,4 +272,71 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('api:test-status', async () => {
     return localApiService.testStatus()
   })
+
+  // --- Profile templates + cookies ---
+  ipcMain.handle('profiles:templates', () => {
+    return PROFILE_TEMPLATES
+  })
+
+  ipcMain.handle('profiles:pick-cookie-file', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        title: 'Chọn file cookie',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Cookie files', extensions: ['json', 'txt'] },
+          { name: 'All files', extensions: ['*'] },
+        ],
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, error: 'Đã huỷ chọn file' }
+      }
+
+      return { success: true, filePath: result.filePaths[0] }
+    } catch (err) {
+      return {
+        success: false,
+        error: toIpcErrorMessage(err, 'Failed to pick cookie file'),
+      }
+    }
+  })
+
+  ipcMain.handle(
+    'profiles:import-cookies',
+    (_e, profileId: unknown, filePath: unknown) => {
+      try {
+        return {
+          success: true,
+          result: cookieService.importFromFile(
+            assertString(profileId, 'profileId'),
+            assertString(filePath, 'filePath')
+          ),
+        }
+      } catch (err) {
+        return {
+          success: false,
+          error: toIpcErrorMessage(err, 'Failed to import cookies'),
+        }
+      }
+    }
+  )
+
+  // --- Camoufox runtime management ---
+  ipcMain.handle('camoufox:status', () => {
+    return getCamoufoxStatus()
+  })
+
+  ipcMain.handle('camoufox:download-current', async () => {
+    try {
+      const status = await downloadCamoufoxForCurrentPlatform()
+      return { success: true, status }
+    } catch (err) {
+      return {
+        success: false,
+        error: toIpcErrorMessage(err, 'Failed to download Camoufox'),
+      }
+    }
+  })
 }
+

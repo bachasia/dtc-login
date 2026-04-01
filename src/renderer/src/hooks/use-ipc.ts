@@ -42,6 +42,22 @@ type LocalApiUpdateResult = Awaited<
   ReturnType<Window['electronAPI']['api']['updateSettings']>
 >
 
+type CamoufoxStatus = Awaited<
+  ReturnType<Window['electronAPI']['camoufox']['status']>
+>
+
+type CamoufoxDownloadResult = Awaited<
+  ReturnType<Window['electronAPI']['camoufox']['downloadCurrent']>
+>
+
+type ProfileTemplate = Awaited<
+  ReturnType<Window['electronAPI']['profiles']['templates']>
+>[number]
+
+type ImportCookiesResult = Awaited<
+  ReturnType<Window['electronAPI']['profiles']['importCookies']>
+>
+
 export function useProfiles(groupId?: string): UseQueryResult<Profile[]> {
   return useQuery<Profile[]>({
     queryKey: ['profiles', groupId ?? 'all'],
@@ -53,6 +69,13 @@ export function useGroups(): UseQueryResult<Group[]> {
   return useQuery<Group[]>({
     queryKey: ['groups'],
     queryFn: () => window.electronAPI.groups.list(),
+  })
+}
+
+export function useProfileTemplates(): UseQueryResult<ProfileTemplate[]> {
+  return useQuery<ProfileTemplate[]>({
+    queryKey: ['profile-templates'],
+    queryFn: () => window.electronAPI.profiles.templates(),
   })
 }
 
@@ -102,6 +125,17 @@ export function useDeleteProfiles(): UseMutationResult<void, Error, string[]> {
   return useMutation({
     mutationFn: (ids: string[]) => window.electronAPI.profiles.bulkDelete(ids),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profiles'] }),
+  })
+}
+
+export function useImportCookies(): UseMutationResult<
+  ImportCookiesResult,
+  Error,
+  { profileId: string; filePath: string }
+> {
+  return useMutation({
+    mutationFn: ({ profileId, filePath }) =>
+      window.electronAPI.profiles.importCookies(profileId, filePath),
   })
 }
 
@@ -210,6 +244,26 @@ export function useTestApiStatus(): UseMutationResult<
 > {
   return useMutation({
     mutationFn: () => window.electronAPI.api.testStatus(),
+  })
+}
+
+export function useCamoufoxStatus(): UseQueryResult<CamoufoxStatus> {
+  return useQuery<CamoufoxStatus>({
+    queryKey: ['camoufox-status'],
+    queryFn: () => window.electronAPI.camoufox.status(),
+  })
+}
+
+export function useDownloadCamoufoxCurrent(): UseMutationResult<
+  CamoufoxDownloadResult,
+  Error,
+  void
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => window.electronAPI.camoufox.downloadCurrent(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['camoufox-status'] }),
   })
 }
 

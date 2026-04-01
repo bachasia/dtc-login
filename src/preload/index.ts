@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (id: string) => ipcRenderer.invoke('profiles:delete', id),
     bulkDelete: (ids: string[]) =>
       ipcRenderer.invoke('profiles:bulk-delete', ids),
+    templates: () => ipcRenderer.invoke('profiles:templates'),
+    pickCookieFile: () => ipcRenderer.invoke('profiles:pick-cookie-file'),
+    importCookies: (profileId: string, filePath: string) =>
+      ipcRenderer.invoke('profiles:import-cookies', profileId, filePath),
   },
   groups: {
     list: () => ipcRenderer.invoke('groups:list'),
@@ -46,6 +50,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       apiKey?: string
     }) => ipcRenderer.invoke('api:update-settings', patch),
     testStatus: () => ipcRenderer.invoke('api:test-status'),
+  },
+  camoufox: {
+    status: () => ipcRenderer.invoke('camoufox:status'),
+    downloadCurrent: () => ipcRenderer.invoke('camoufox:download-current'),
   },
   // Returns an unsubscribe function to prevent listener leaks in React useEffect teardowns
   on: (channel: string, cb: (...args: unknown[]) => void): (() => void) => {

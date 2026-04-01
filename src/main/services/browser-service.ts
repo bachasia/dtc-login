@@ -51,7 +51,7 @@ export const browserService = {
         String(debugPort),
         '--profile',
         profileDir,
-        '--no-first-run',
+        '-no-remote',                 // prevent attaching to an existing Firefox instance
         '--no-default-browser-check',
       ]
       if (proxyArg) args.push('--proxy-server', proxyArg)
@@ -181,7 +181,7 @@ export const browserService = {
 async function waitForBrowserReady(
   port: number,
   proc: ChildProcess,
-  timeoutMs = 10_000
+  timeoutMs = 30_000
 ): Promise<string> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {

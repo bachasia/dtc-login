@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react'
 import {
+  Bot,
+  CheckCircle2,
+  Clipboard,
+  KeyRound,
+  Languages,
+  Palette,
+  Plug,
+  Save,
+  TestTube2,
+} from 'lucide-react'
+import {
   useApiSettings,
   useTestApiStatus,
   useUpdateApiSettings,
@@ -100,7 +111,10 @@ export function SettingsPage({
         <h2>Cài đặt ứng dụng</h2>
 
         <div>
-          <h3 className="section-title">Giao diện</h3>
+          <h3 className="section-title section-title-inline">
+            <Palette size={15} strokeWidth={2} />
+            <span>Giao diện</span>
+          </h3>
           <div className="inline-actions">
             <button
               className={theme === 'dark' ? 'primary-btn' : 'secondary-btn'}
@@ -118,12 +132,18 @@ export function SettingsPage({
         </div>
 
         <div>
-          <h3 className="section-title">Ngôn ngữ</h3>
+          <h3 className="section-title section-title-inline">
+            <Languages size={15} strokeWidth={2} />
+            <span>Ngôn ngữ</span>
+          </h3>
           <p>Tiếng Việt (mặc định)</p>
         </div>
 
         <div>
-          <h3 className="section-title">Local API (Automation)</h3>
+          <h3 className="section-title section-title-inline">
+            <Bot size={15} strokeWidth={2} />
+            <span>Local API (Automation)</span>
+          </h3>
           <p className="muted">AdsPower-compatible endpoint tại 127.0.0.1</p>
 
           <div className="group-box" style={{ marginTop: 10 }}>
@@ -165,34 +185,44 @@ export function SettingsPage({
 
             <div className="inline-actions">
               <button
-                className="secondary-btn"
+                className="secondary-btn button-with-icon"
                 onClick={() => setApiKey(generateApiKey())}
               >
-                Generate key
+                <KeyRound size={15} strokeWidth={2} />
+                <span>Generate key</span>
               </button>
-              <button className="ghost-btn" onClick={() => void onCopyApiKey()}>
-                Copy key
+              <button className="ghost-btn button-with-icon" onClick={() => void onCopyApiKey()}>
+                <Clipboard size={15} strokeWidth={2} />
+                <span>Copy key</span>
               </button>
               <button
-                className="primary-btn"
+                className="primary-btn button-with-icon"
                 onClick={() => void onSaveApiSettings()}
                 disabled={isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save API settings'}
+                <Save size={15} strokeWidth={2} />
+                <span>{isSaving ? 'Saving...' : 'Save API settings'}</span>
               </button>
               <button
-                className="ghost-btn"
+                className="ghost-btn button-with-icon"
                 onClick={() => void onTestApi()}
                 disabled={testApiStatus.isPending}
               >
-                {testApiStatus.isPending ? 'Testing...' : 'Test API'}
+                <TestTube2 size={15} strokeWidth={2} />
+                <span>{testApiStatus.isPending ? 'Testing...' : 'Test API'}</span>
               </button>
             </div>
 
-            <p className="muted">
-              Runtime status: {runtimeRunning ? 'running' : 'stopped'}
+            <p className="muted status-inline">
+              <Plug size={14} strokeWidth={2} />
+              <span>Runtime status: {runtimeRunning ? 'running' : 'stopped'}</span>
             </p>
-            {copyMessage && <p className="muted">{copyMessage}</p>}
+            {copyMessage && (
+              <p className="muted status-inline">
+                <CheckCircle2 size={14} strokeWidth={2} />
+                <span>{copyMessage}</span>
+              </p>
+            )}
             {message && <p className="error-text">{message}</p>}
             {apiSettingsQuery.error && (
               <p className="error-text">Không thể đọc API settings</p>

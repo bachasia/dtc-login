@@ -1,5 +1,5 @@
 import * as net from 'net'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID as uuidv4 } from 'crypto'
 import { getDb } from '../db/database'
 import type { Proxy, CreateProxyInput } from '../../shared/types'
 

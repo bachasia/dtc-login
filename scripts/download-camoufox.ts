@@ -8,8 +8,8 @@ import { mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import * as https from 'https'
 
-const CAMOUFOX_VERSION = '0.4.2'
-const GITHUB_RELEASES_BASE = `https://github.com/coryking/camoufox/releases/download/v${CAMOUFOX_VERSION}`
+const CAMOUFOX_VERSION = '135.0.1-beta.24'
+const GITHUB_RELEASES_BASE = `https://github.com/daijro/camoufox/releases/download/v${CAMOUFOX_VERSION}`
 
 interface PlatformTarget {
   platform: string
@@ -17,26 +17,39 @@ interface PlatformTarget {
   asset: string
 }
 
+function getReleaseOsName(platform: string): 'win' | 'mac' | 'lin' {
+  if (platform === 'win32') return 'win'
+  if (platform === 'darwin') return 'mac'
+  if (platform === 'linux') return 'lin'
+  throw new Error(`Unsupported platform: ${platform}`)
+}
+
+function getReleaseArchName(arch: string): 'x86_64' | 'arm64' {
+  if (arch === 'x64') return 'x86_64'
+  if (arch === 'arm64') return 'arm64'
+  throw new Error(`Unsupported arch: ${arch}`)
+}
+
 const ALL_PLATFORMS: PlatformTarget[] = [
   {
     platform: 'win32',
     arch: 'x64',
-    asset: `camoufox-${CAMOUFOX_VERSION}-win32-x64.zip`,
+    asset: `camoufox-${CAMOUFOX_VERSION}-win.x86_64.zip`,
   },
   {
     platform: 'darwin',
     arch: 'x64',
-    asset: `camoufox-${CAMOUFOX_VERSION}-darwin-x64.tar.gz`,
+    asset: `camoufox-${CAMOUFOX_VERSION}-mac.x86_64.zip`,
   },
   {
     platform: 'darwin',
     arch: 'arm64',
-    asset: `camoufox-${CAMOUFOX_VERSION}-darwin-arm64.tar.gz`,
+    asset: `camoufox-${CAMOUFOX_VERSION}-mac.arm64.zip`,
   },
   {
     platform: 'linux',
     arch: 'x64',
-    asset: `camoufox-${CAMOUFOX_VERSION}-linux-x64.tar.gz`,
+    asset: `camoufox-${CAMOUFOX_VERSION}-lin.x86_64.zip`,
   },
 ]
 
