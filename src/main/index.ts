@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
+import { getDb } from './db/database'
 import { registerIpcHandlers } from './ipc-handlers'
 
 function createWindow(): void {
@@ -41,6 +42,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  getDb() // eager init — ensures DB + migrations run before any IPC handler fires
   registerIpcHandlers()
   createWindow()
   app.on('activate', () => {

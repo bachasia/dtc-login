@@ -59,7 +59,7 @@ Electron Desktop App (shell)
 | # | Phase | Timeline | Status |
 |---|-------|----------|--------|
 | 01 | [Project Setup & Electron Foundation](phase-01-project-setup-electron-foundation.md) | Month 1, Week 1-2 | complete |
-| 02 | [Profile Manager & SQLite Core](phase-02-profile-manager-sqlite-core.md) | Month 1, Week 3-4 | pending |
+| 02 | [Profile Manager & SQLite Core](phase-02-profile-manager-sqlite-core.md) | Month 1, Week 3-4 | complete |
 | 03 | [Camoufox Browser Launcher](phase-03-camoufox-browser-launcher.md) | Month 2 | pending |
 | 04 | [React UI Desktop App](phase-04-react-ui-desktop-app.md) | Month 3-4 | pending |
 | 05 | [Automation & Local API](phase-05-automation-local-api.md) | Month 5-6 | pending |
